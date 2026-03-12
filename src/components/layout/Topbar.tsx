@@ -1,4 +1,4 @@
-import { Search, Bell, Plus, ChevronDown, Settings, User, LogOut } from 'lucide-react';
+import { Search, Bell, Plus, ChevronDown, Settings, User, LogOut, Sun, Moon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SidebarTrigger } from '@/components/ui/sidebar';
@@ -7,6 +7,7 @@ import {
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export function Topbar() {
   const navigate = useNavigate();
