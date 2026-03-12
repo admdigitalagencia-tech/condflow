@@ -1,4 +1,4 @@
-import { Search, Bell, Plus, ChevronDown, Settings, User, LogOut } from 'lucide-react';
+import { Search, Bell, Plus, ChevronDown, Settings, User, LogOut, Sun, Moon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SidebarTrigger } from '@/components/ui/sidebar';
@@ -7,9 +7,11 @@ import {
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export function Topbar() {
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <header className="h-14 flex items-center border-b border-border/60 bg-card/80 backdrop-blur-sm px-4 shrink-0 gap-3 sticky top-0 z-30">
@@ -39,6 +41,11 @@ export function Topbar() {
             <DropdownMenuItem onClick={() => navigate('/assembleias')} className="text-sm">Nova Assembleia</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        {/* Theme toggle */}
+        <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground transition-colors">
+          {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+        </Button>
 
         {/* Notifications */}
         <Button variant="ghost" size="icon" className="relative h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground transition-colors">
