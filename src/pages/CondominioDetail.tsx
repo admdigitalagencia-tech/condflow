@@ -284,13 +284,18 @@ export default function CondominioDetail() {
           )}
         </TabsContent>
 
-        {/* HISTÓRICO */}
+        {/* TIMELINE */}
         <TabsContent value="historico" className="mt-4">
-          <SummaryCard title="Histórico de Atividade">
-            <div className="py-2">
-              <TimelineItem date={formatDate(condo.created_at)} title="Condomínio criado" variant="success" />
-              <TimelineItem date={formatDate(condo.updated_at)} title="Última atualização" isLast />
-            </div>
+          <SummaryCard title="Timeline de Eventos">
+            {logsLoading ? (
+              <div className="flex justify-center py-8">
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              </div>
+            ) : (
+              <div className="py-4">
+                <ActivityTimeline logs={activityLogs || []} />
+              </div>
+            )}
           </SummaryCard>
         </TabsContent>
 
