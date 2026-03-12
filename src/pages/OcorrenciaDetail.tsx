@@ -304,23 +304,29 @@ export default function OcorrenciaDetail() {
             </SummaryCard>
           )}
 
-          {/* AI Assistant placeholder */}
-          <SummaryCard title="Assistente IA">
-            <div className="space-y-3">
-              <div className="rounded-md bg-muted/50 p-3 border border-dashed">
-                <div className="flex items-center gap-2 mb-2">
-                  <Brain className="h-4 w-4 text-accent" />
-                  <span className="text-xs font-semibold text-accent">IA Disponível em breve</span>
-                </div>
-                <ul className="space-y-1.5 text-xs text-muted-foreground">
-                  <li>• Resumo automático da ocorrência</li>
-                  <li>• Sugestão de próximos passos</li>
-                  <li>• Classificação inteligente</li>
-                  <li>• Geração de resposta formal</li>
-                </ul>
-              </div>
-            </div>
-          </SummaryCard>
+          {/* AI Assistant */}
+          <AIAssistantPanel
+            actions={[
+              {
+                label: 'Gerar resumo da ocorrência',
+                feature: 'ticket_summary',
+                icon: FileText,
+                buildPrompt: () => `Analisa esta ocorrência:\n\nTítulo: ${ticket.title}\nCódigo: ${ticket.code}\nCategoria: ${categoryLabel(ticket.category)}\nPrioridade: ${priorityLabel(ticket.priority)}\nEstado: ${statusLabel(ticket.status)}\nCondomínio: ${ticket.condominiums?.name || 'N/A'}\nDescrição: ${ticket.description || 'Sem descrição'}\nAberta em: ${formatDateTime(ticket.opened_at)}\nPrazo: ${formatDate(ticket.due_date)}\n\nHistórico de atualizações:\n${(updates || []).map(u => `- [${u.update_type}] ${u.body || ''} (${formatDateTime(u.created_at)})`).join('\n') || 'Sem atualizações'}`,
+              },
+              {
+                label: 'Sugerir próximos passos',
+                feature: 'next_steps',
+                icon: ListChecks,
+                buildPrompt: () => `Com base nesta ocorrência, sugere os próximos passos operacionais:\n\nTítulo: ${ticket.title}\nCategoria: ${categoryLabel(ticket.category)}\nPrioridade: ${priorityLabel(ticket.priority)}\nEstado: ${statusLabel(ticket.status)}\nDescrição: ${ticket.description || 'Sem descrição'}\nCondomínio: ${ticket.condominiums?.name || 'N/A'}`,
+              },
+              {
+                label: 'Gerar resposta formal',
+                feature: 'formal_response',
+                icon: MessageSquare,
+                buildPrompt: () => `Gera uma resposta formal para comunicar aos condóminos sobre esta ocorrência:\n\nTítulo: ${ticket.title}\nCategoria: ${categoryLabel(ticket.category)}\nEstado atual: ${statusLabel(ticket.status)}\nDescrição: ${ticket.description || 'Sem descrição'}\nCondomínio: ${ticket.condominiums?.name || 'N/A'}`,
+              },
+            ]}
+          />
         </div>
       </div>
 
