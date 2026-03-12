@@ -23,6 +23,7 @@ import Agenda from '@/pages/Agenda';
 import Relatorios from '@/pages/Relatorios';
 import CentralIA from '@/pages/CentralIA';
 import Configuracoes from '@/pages/Configuracoes';
+import Tarefas from '@/pages/Tarefas';
 import NotFound from '@/pages/NotFound';
 
 const queryClient = new QueryClient();
