@@ -1,138 +1,348 @@
-import { useParams, useNavigate } from "react-router-dom";
-import { mockCondominios, mockOcorrencias, mockAssembleias } from "@/data/mockData";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Building2 } from "lucide-react";
-
-const priorityClass: Record<string, string> = {
-  Baixa: "badge-priority-low", Média: "badge-priority-medium",
-  Alta: "badge-priority-high", Crítica: "badge-priority-critical",
-};
-const statusClass: Record<string, string> = {
-  Aberto: "badge-status-open", "Em Análise": "badge-status-analysis",
-  "Orçamento Solicitado": "badge-status-budget", "Aguardando Aprovação": "badge-status-approval",
-  "Em Execução": "badge-status-execution", Resolvido: "badge-status-resolved", Encerrado: "badge-status-closed",
-};
+import { useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useCondominium, useUpdateCondominium } from '@/hooks/useCondominiums';
+import { useStakeholdersByCondominium, useLinkStakeholder, useUnlinkStakeholder } from '@/hooks/useStakeholders';
+import { useStakeholders } from '@/hooks/useStakeholders';
+import { useSuppliersByCondominium, useLinkSupplier, useUnlinkSupplier } from '@/hooks/useSuppliers';
+import { useSuppliers } from '@/hooks/useSuppliers';
+import { useCondominiumNotes, useCreateNote, useDeleteNote } from '@/hooks/useCondominiumNotes';
+import { STAKEHOLDER_TYPES } from '@/services/stakeholders';
+import { SUPPLIER_CATEGORIES } from '@/services/suppliers';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SummaryCard } from '@/components/shared/SummaryCard';
+import { EmptyState } from '@/components/shared/EmptyState';
+import { TimelineItem } from '@/components/shared/TimelineItem';
+import { CondominiumFormDialog } from '@/components/condominiums/CondominiumFormDialog';
+import {
+  ArrowLeft, Building2, Pencil, Users, Truck, History, StickyNote,
+  Plus, X, Mail, Phone,
+} from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function CondominioDetail() {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const nav = useNavigate();
-  const c = mockCondominios.find(c => c.id === id);
-  if (!c) return <div className="p-6">Condomínio não encontrado.</div>;
+  const { data: condo, isLoading } = useCondominium(id!);
+  const { data: stakeholderLinks } = useStakeholdersByCondominium(id!);
+  const { data: allStakeholders } = useStakeholders();
+  const { data: supplierLinks } = useSuppliersByCondominium(id!);
+  const { data: allSuppliers } = useSuppliers();
+  const { data: notes } = useCondominiumNotes(id!);
+  const createNoteMutation = useCreateNote();
+  const deleteNoteMutation = useDeleteNote(id!);
+  const linkStakeholder = useLinkStakeholder();
+  const unlinkStakeholder = useUnlinkStakeholder();
+  const linkSupplier = useLinkSupplier();
+  const unlinkSupplier = useUnlinkSupplier();
 
-  const ocorrencias = mockOcorrencias.filter(o => o.condominioId === id);
-  const assembleias = mockAssembleias.filter(a => a.condominioId === id);
+  const [editOpen, setEditOpen] = useState(false);
+  const [newNote, setNewNote] = useState('');
+  const [selectedStakeholder, setSelectedStakeholder] = useState('');
+  const [selectedSupplier, setSelectedSupplier] = useState('');
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-12">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!condo) return <div className="p-6">Condomínio não encontrado.</div>;
+
+  const linkedStakeholderIds = new Set((stakeholderLinks || []).map(l => l.stakeholder_id));
+  const availableStakeholders = (allStakeholders || []).filter(s => !linkedStakeholderIds.has(s.id));
+
+  const linkedSupplierIds = new Set((supplierLinks || []).map(l => l.supplier_id));
+  const availableSuppliers = (allSuppliers || []).filter(s => !linkedSupplierIds.has(s.id));
+
+  const handleAddNote = async () => {
+    if (!newNote.trim()) return;
+    try {
+      await createNoteMutation.mutateAsync({ condominiumId: id!, content: newNote });
+      setNewNote('');
+      toast.success('Nota adicionada');
+    } catch {
+      toast.error('Erro ao adicionar nota');
+    }
+  };
+
+  const handleLinkStakeholder = async () => {
+    if (!selectedStakeholder) return;
+    try {
+      await linkStakeholder.mutateAsync({ stakeholderId: selectedStakeholder, condominiumId: id! });
+      setSelectedStakeholder('');
+      toast.success('Stakeholder associado');
+    } catch {
+      toast.error('Erro ao associar stakeholder');
+    }
+  };
+
+  const handleLinkSupplier = async () => {
+    if (!selectedSupplier) return;
+    try {
+      await linkSupplier.mutateAsync({ supplierId: selectedSupplier, condominiumId: id! });
+      setSelectedSupplier('');
+      toast.success('Fornecedor associado');
+    } catch {
+      toast.error('Erro ao associar fornecedor');
+    }
+  };
+
+  const formatDate = (d: string) => new Date(d).toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+  const typeLabel = (t: string) => STAKEHOLDER_TYPES.find(st => st.value === t)?.label || t;
+  const catLabel = (c: string) => SUPPLIER_CATEGORIES.find(sc => sc.value === c)?.label || c;
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => nav("/condominios")}>
+      {/* Header */}
+      <div className="flex items-start gap-4">
+        <Button variant="ghost" size="icon" onClick={() => nav('/condominios')} className="mt-1">
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <div className="flex items-center gap-2">
-          <Building2 className="h-5 w-5 text-accent" />
-          <h1 className="text-xl font-bold">{c.nome}</h1>
-          <Badge variant="outline" className={c.ativo ? "badge-priority-low" : "badge-status-closed"}>
-            {c.ativo ? "Ativo" : "Inativo"}
-          </Badge>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-3 flex-wrap">
+            <Building2 className="h-5 w-5 text-accent shrink-0" />
+            <h1 className="text-xl font-bold truncate">{condo.name}</h1>
+            <Badge variant="outline" className={condo.active ? 'badge-status-resolved' : 'badge-status-closed'}>
+              {condo.active ? 'Ativo' : 'Inativo'}
+            </Badge>
+          </div>
+          <p className="text-sm text-muted-foreground mt-1">
+            {[condo.address_line, condo.postal_code, condo.city].filter(Boolean).join(' · ')}
+            {condo.nif && ` · NIF ${condo.nif}`}
+          </p>
         </div>
+        <Button size="sm" variant="outline" className="gap-1.5 shrink-0" onClick={() => setEditOpen(true)}>
+          <Pencil className="h-3.5 w-3.5" /> Editar
+        </Button>
       </div>
 
+      {/* Tabs */}
       <Tabs defaultValue="geral">
         <TabsList>
           <TabsTrigger value="geral">Visão Geral</TabsTrigger>
-          <TabsTrigger value="ocorrencias">Ocorrências ({ocorrencias.length})</TabsTrigger>
-          <TabsTrigger value="assembleias">Assembleias ({assembleias.length})</TabsTrigger>
-          <TabsTrigger value="documentos">Documentos</TabsTrigger>
-          <TabsTrigger value="stakeholders">Stakeholders</TabsTrigger>
+          <TabsTrigger value="stakeholders">
+            Stakeholders {stakeholderLinks?.length ? `(${stakeholderLinks.length})` : ''}
+          </TabsTrigger>
+          <TabsTrigger value="fornecedores">
+            Fornecedores {supplierLinks?.length ? `(${supplierLinks.length})` : ''}
+          </TabsTrigger>
           <TabsTrigger value="historico">Histórico</TabsTrigger>
+          <TabsTrigger value="notas">
+            Notas {notes?.length ? `(${notes.length})` : ''}
+          </TabsTrigger>
         </TabsList>
 
+        {/* ---- VISÃO GERAL ---- */}
         <TabsContent value="geral" className="mt-4">
           <div className="grid gap-4 md:grid-cols-2">
-            <div className="stat-card space-y-2">
-              <h3 className="text-sm font-semibold">Dados Gerais</h3>
-              <div className="space-y-1 text-sm">
-                <p><span className="text-muted-foreground">Morada:</span> {c.morada}</p>
-                <p><span className="text-muted-foreground">Código Postal:</span> {c.codigoPostal}</p>
-                <p><span className="text-muted-foreground">Cidade:</span> {c.cidade}</p>
-                <p><span className="text-muted-foreground">NIF:</span> {c.nif}</p>
-                <p><span className="text-muted-foreground">Desde:</span> {c.criadoEm}</p>
+            <SummaryCard title="Dados Cadastrais">
+              <div className="space-y-2 text-sm">
+                <InfoRow label="Morada" value={condo.address_line} />
+                <InfoRow label="Código Postal" value={condo.postal_code} />
+                <InfoRow label="Cidade" value={condo.city} />
+                <InfoRow label="Distrito" value={condo.district} />
+                <InfoRow label="NIF" value={condo.nif} />
+                <InfoRow label="Ano de Construção" value={condo.year_built?.toString()} />
               </div>
-              {c.observacoes && <p className="text-xs text-muted-foreground border-t pt-2">{c.observacoes}</p>}
-            </div>
-            <div className="stat-card space-y-2">
-              <h3 className="text-sm font-semibold">Resumo</h3>
-              <div className="space-y-1 text-sm">
-                <p><span className="text-muted-foreground">Ocorrências abertas:</span> {ocorrencias.filter(o => !["Resolvido","Encerrado"].includes(o.status)).length}</p>
-                <p><span className="text-muted-foreground">Assembleias agendadas:</span> {assembleias.filter(a => a.estado === "Agendada").length}</p>
+            </SummaryCard>
+
+            <SummaryCard title="Informações do Edifício">
+              <div className="space-y-2 text-sm">
+                <InfoRow label="Nº de Frações" value={condo.fractions_count?.toString()} />
+                <InfoRow label="Nº de Pisos" value={condo.floors_count?.toString()} />
+                <InfoRow label="Criado em" value={formatDate(condo.created_at)} />
+                <InfoRow label="Última Atualização" value={formatDate(condo.updated_at)} />
               </div>
-            </div>
+              {condo.notes && (
+                <div className="mt-4 pt-3 border-t">
+                  <p className="text-xs text-muted-foreground mb-1">Observações</p>
+                  <p className="text-sm">{condo.notes}</p>
+                </div>
+              )}
+            </SummaryCard>
+
+            {/* Reserved space for future KPIs */}
+            <SummaryCard title="Indicadores" className="md:col-span-2">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-4">
+                <PlaceholderKPI label="Ocorrências Abertas" value="—" />
+                <PlaceholderKPI label="Assembleias Agendadas" value="—" />
+                <PlaceholderKPI label="Documentos" value="—" />
+                <PlaceholderKPI label="Custos (mês)" value="—" />
+              </div>
+            </SummaryCard>
           </div>
         </TabsContent>
 
-        <TabsContent value="ocorrencias" className="mt-4">
-          {ocorrencias.length === 0 ? (
-            <p className="text-sm text-muted-foreground p-4">Sem ocorrências registadas.</p>
+        {/* ---- STAKEHOLDERS ---- */}
+        <TabsContent value="stakeholders" className="mt-4 space-y-4">
+          <div className="flex items-center gap-2">
+            <Select value={selectedStakeholder} onValueChange={setSelectedStakeholder}>
+              <SelectTrigger className="w-[250px] h-9">
+                <SelectValue placeholder="Selecionar stakeholder..." />
+              </SelectTrigger>
+              <SelectContent>
+                {availableStakeholders.map(s => (
+                  <SelectItem key={s.id} value={s.id}>{s.name} — {typeLabel(s.stakeholder_type)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button size="sm" onClick={handleLinkStakeholder} disabled={!selectedStakeholder || linkStakeholder.isPending}>
+              <Plus className="h-3.5 w-3.5 mr-1" /> Associar
+            </Button>
+          </div>
+
+          {(!stakeholderLinks || stakeholderLinks.length === 0) ? (
+            <EmptyState icon={Users} title="Sem stakeholders" description="Associe stakeholders a este condomínio." />
           ) : (
-            <div className="rounded-lg border bg-card overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b bg-muted/50">
-                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Título</th>
-                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Categoria</th>
-                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Prioridade</th>
-                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Status</th>
-                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Data</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {ocorrencias.map(o => (
-                    <tr key={o.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
-                      <td className="px-4 py-3 font-medium">{o.titulo}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{o.categoria}</td>
-                      <td className="px-4 py-3"><Badge variant="outline" className={`text-[11px] ${priorityClass[o.prioridade]}`}>{o.prioridade}</Badge></td>
-                      <td className="px-4 py-3"><Badge variant="outline" className={`text-[11px] ${statusClass[o.status]}`}>{o.status}</Badge></td>
-                      <td className="px-4 py-3 text-muted-foreground">{o.dataAbertura}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="grid gap-3 md:grid-cols-2">
+              {stakeholderLinks.map((link) => {
+                const s = link.stakeholders as any;
+                if (!s) return null;
+                return (
+                  <div key={link.id} className="rounded-lg border bg-card p-4 flex justify-between items-start">
+                    <div>
+                      <p className="font-medium text-sm">{s.name}</p>
+                      <p className="text-xs text-muted-foreground">{typeLabel(s.stakeholder_type)}{s.role_title ? ` · ${s.role_title}` : ''}</p>
+                      <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                        {s.email && <span className="flex items-center gap-1"><Mail className="h-3 w-3" />{s.email}</span>}
+                        {s.phone && <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{s.phone}</span>}
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                      onClick={() => unlinkStakeholder.mutate({ stakeholderId: link.stakeholder_id, condominiumId: id! })}
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                );
+              })}
             </div>
           )}
         </TabsContent>
 
-        <TabsContent value="assembleias" className="mt-4">
-          {assembleias.length === 0 ? (
-            <p className="text-sm text-muted-foreground p-4">Sem assembleias registadas.</p>
+        {/* ---- FORNECEDORES ---- */}
+        <TabsContent value="fornecedores" className="mt-4 space-y-4">
+          <div className="flex items-center gap-2">
+            <Select value={selectedSupplier} onValueChange={setSelectedSupplier}>
+              <SelectTrigger className="w-[250px] h-9">
+                <SelectValue placeholder="Selecionar fornecedor..." />
+              </SelectTrigger>
+              <SelectContent>
+                {availableSuppliers.map(s => (
+                  <SelectItem key={s.id} value={s.id}>{s.name} — {catLabel(s.supplier_category)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button size="sm" onClick={handleLinkSupplier} disabled={!selectedSupplier || linkSupplier.isPending}>
+              <Plus className="h-3.5 w-3.5 mr-1" /> Associar
+            </Button>
+          </div>
+
+          {(!supplierLinks || supplierLinks.length === 0) ? (
+            <EmptyState icon={Truck} title="Sem fornecedores" description="Associe fornecedores a este condomínio." />
+          ) : (
+            <div className="grid gap-3 md:grid-cols-2">
+              {supplierLinks.map((link) => {
+                const s = link.suppliers as any;
+                if (!s) return null;
+                return (
+                  <div key={link.id} className="rounded-lg border bg-card p-4 flex justify-between items-start">
+                    <div>
+                      <p className="font-medium text-sm">{s.name}</p>
+                      <p className="text-xs text-muted-foreground">{catLabel(s.supplier_category)}</p>
+                      <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                        {s.email && <span className="flex items-center gap-1"><Mail className="h-3 w-3" />{s.email}</span>}
+                        {s.phone && <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{s.phone}</span>}
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                      onClick={() => unlinkSupplier.mutate({ supplierId: link.supplier_id, condominiumId: id! })}
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </TabsContent>
+
+        {/* ---- HISTÓRICO ---- */}
+        <TabsContent value="historico" className="mt-4">
+          <SummaryCard title="Histórico de Atividade">
+            <div className="py-2">
+              <TimelineItem date={formatDate(condo.created_at)} title="Condomínio criado" variant="success" />
+              <TimelineItem date={formatDate(condo.updated_at)} title="Última atualização" isLast />
+            </div>
+          </SummaryCard>
+        </TabsContent>
+
+        {/* ---- NOTAS ---- */}
+        <TabsContent value="notas" className="mt-4 space-y-4">
+          <div className="flex gap-2">
+            <Textarea
+              placeholder="Escrever nota interna..."
+              value={newNote}
+              onChange={(e) => setNewNote(e.target.value)}
+              rows={2}
+              className="flex-1"
+            />
+            <Button onClick={handleAddNote} disabled={!newNote.trim() || createNoteMutation.isPending} className="self-end">
+              <Plus className="h-4 w-4 mr-1" /> Adicionar
+            </Button>
+          </div>
+
+          {(!notes || notes.length === 0) ? (
+            <EmptyState icon={StickyNote} title="Sem notas" description="Adicione notas internas sobre este condomínio." />
           ) : (
             <div className="space-y-3">
-              {assembleias.map(a => (
-                <div key={a.id} className="stat-card">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-semibold text-sm">{a.tipo} — {a.data}</span>
-                    <Badge variant="outline" className={a.estado === "Agendada" ? "badge-status-execution" : a.estado === "Concluída" ? "badge-status-resolved" : "badge-status-closed"}>
-                      {a.estado}
-                    </Badge>
+              {notes.map((note) => (
+                <div key={note.id} className="rounded-lg border bg-card p-4 group">
+                  <div className="flex justify-between items-start">
+                    <p className="text-sm whitespace-pre-wrap">{note.content}</p>
+                    <Button
+                      variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive"
+                      onClick={() => deleteNoteMutation.mutate(note.id)}
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </Button>
                   </div>
-                  <p className="text-xs text-muted-foreground">{a.hora} • {a.local}</p>
+                  <p className="text-xs text-muted-foreground mt-2">{formatDate(note.created_at)}</p>
                 </div>
               ))}
             </div>
           )}
         </TabsContent>
-
-        <TabsContent value="documentos" className="mt-4">
-          <p className="text-sm text-muted-foreground p-4">Módulo de documentos — em breve.</p>
-        </TabsContent>
-        <TabsContent value="stakeholders" className="mt-4">
-          <p className="text-sm text-muted-foreground p-4">Módulo de stakeholders — em breve.</p>
-        </TabsContent>
-        <TabsContent value="historico" className="mt-4">
-          <p className="text-sm text-muted-foreground p-4">Histórico — em breve.</p>
-        </TabsContent>
       </Tabs>
+
+      <CondominiumFormDialog open={editOpen} onOpenChange={setEditOpen} condominium={condo} />
+    </div>
+  );
+}
+
+function InfoRow({ label, value }: { label: string; value?: string | null }) {
+  return (
+    <div className="flex justify-between">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="font-medium">{value || '—'}</span>
+    </div>
+  );
+}
+
+function PlaceholderKPI({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="text-center">
+      <p className="text-2xl font-bold text-muted-foreground">{value}</p>
+      <p className="text-xs text-muted-foreground mt-1">{label}</p>
     </div>
   );
 }
