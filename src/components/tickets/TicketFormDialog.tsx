@@ -168,7 +168,7 @@ export function TicketFormDialog({ open, onOpenChange, ticket, defaultCondominiu
               <Select value={form.supplier_id} onValueChange={v => set('supplier_id', v)}>
                 <SelectTrigger><SelectValue placeholder="Selecionar..." /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Nenhum</SelectItem>
+                  <SelectItem value="none">Nenhum</SelectItem>
                   {(suppliers || []).filter(s => s.active).map(s => (
                     <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
                   ))}
