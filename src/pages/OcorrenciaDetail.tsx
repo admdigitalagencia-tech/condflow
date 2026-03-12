@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import {
   ArrowLeft, Pencil, MessageSquare, Clock, ArrowRightLeft,
-  Brain, FileText, Euro, CheckSquare, Building2, Truck, MapPin, Calendar,
+  Brain, FileText, Euro, CheckSquare, Building2, Truck, MapPin, Calendar, ListChecks,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
