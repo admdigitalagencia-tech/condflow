@@ -27,12 +27,13 @@ import NotFound from '@/pages/NotFound';
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AppLayout>
+  <ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AppLayout>
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/condominios" element={<Condominios />} />
