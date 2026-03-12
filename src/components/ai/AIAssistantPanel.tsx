@@ -112,6 +112,3 @@ export function AIAssistantPanel({ actions, title = 'Assistente IA' }: Props) {
     </SummaryCard>
   );
 }
-
-// Re-export action builders
-export { Brain, FileText, MessageSquare, ListChecks };
