@@ -1,11 +1,12 @@
 import {
   Building2, AlertTriangle, Calendar, Clock, AlertOctagon,
-  ArrowRight, CheckCircle2, BookOpen,
+  ArrowRight, CheckCircle2, BookOpen, ListChecks,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCondominiums } from '@/hooks/useCondominiums';
 import { useTickets, useTicketStats } from '@/hooks/useTickets';
 import { useAssemblyStats } from '@/hooks/useAssemblies';
+import { useTaskStats } from '@/hooks/useTasks';
 import { TicketPriorityBadge, TicketStatusBadge } from '@/components/tickets/TicketBadges';
 import { categoryLabel } from '@/services/tickets';
 import { PageHeader } from '@/components/shared/PageHeader';
