@@ -11,6 +11,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 
 export function Topbar() {
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <header className="h-14 flex items-center border-b border-border/60 bg-card/80 backdrop-blur-sm px-4 shrink-0 gap-3 sticky top-0 z-30">
