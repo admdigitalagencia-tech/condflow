@@ -11,6 +11,7 @@ import Condominios from '@/pages/Condominios';
 import CondominioDetail from '@/pages/CondominioDetail';
 import Ocorrencias from '@/pages/Ocorrencias';
 import OcorrenciaDetail from '@/pages/OcorrenciaDetail';
+import Assembleias from '@/pages/Assembleias';
 import Documentos from '@/pages/Documentos';
 import Stakeholders from '@/pages/Stakeholders';
 import Fornecedores from '@/pages/Fornecedores';
