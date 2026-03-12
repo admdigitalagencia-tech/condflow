@@ -14,6 +14,106 @@ export type Database = {
   }
   public: {
     Tables: {
+      condominium_notes: {
+        Row: {
+          condominium_id: string
+          content: string
+          created_at: string
+          created_by: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          condominium_id: string
+          content: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          condominium_id?: string
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "condominium_notes_condominium_id_fkey"
+            columns: ["condominium_id"]
+            isOneToOne: false
+            referencedRelation: "condominiums"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      condominiums: {
+        Row: {
+          active: boolean
+          address_line: string | null
+          city: string | null
+          created_at: string
+          created_by: string | null
+          district: string | null
+          floors_count: number | null
+          fractions_count: number | null
+          id: string
+          name: string
+          nif: string | null
+          notes: string | null
+          organization_id: string | null
+          postal_code: string | null
+          updated_at: string
+          year_built: number | null
+        }
+        Insert: {
+          active?: boolean
+          address_line?: string | null
+          city?: string | null
+          created_at?: string
+          created_by?: string | null
+          district?: string | null
+          floors_count?: number | null
+          fractions_count?: number | null
+          id?: string
+          name: string
+          nif?: string | null
+          notes?: string | null
+          organization_id?: string | null
+          postal_code?: string | null
+          updated_at?: string
+          year_built?: number | null
+        }
+        Update: {
+          active?: boolean
+          address_line?: string | null
+          city?: string | null
+          created_at?: string
+          created_by?: string | null
+          district?: string | null
+          floors_count?: number | null
+          fractions_count?: number | null
+          id?: string
+          name?: string
+          nif?: string | null
+          notes?: string | null
+          organization_id?: string | null
+          postal_code?: string | null
+          updated_at?: string
+          year_built?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "condominiums_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organization_users: {
         Row: {
           created_at: string
@@ -124,6 +224,187 @@ export type Database = {
         }
         Relationships: []
       }
+      stakeholder_condominiums: {
+        Row: {
+          condominium_id: string
+          created_at: string
+          id: string
+          role_in_condominium: string | null
+          stakeholder_id: string
+        }
+        Insert: {
+          condominium_id: string
+          created_at?: string
+          id?: string
+          role_in_condominium?: string | null
+          stakeholder_id: string
+        }
+        Update: {
+          condominium_id?: string
+          created_at?: string
+          id?: string
+          role_in_condominium?: string | null
+          stakeholder_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stakeholder_condominiums_condominium_id_fkey"
+            columns: ["condominium_id"]
+            isOneToOne: false
+            referencedRelation: "condominiums"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stakeholder_condominiums_stakeholder_id_fkey"
+            columns: ["stakeholder_id"]
+            isOneToOne: false
+            referencedRelation: "stakeholders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stakeholders: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          organization_id: string | null
+          phone: string | null
+          preferred_contact_channel: string | null
+          role_title: string | null
+          stakeholder_type: Database["public"]["Enums"]["stakeholder_type"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          organization_id?: string | null
+          phone?: string | null
+          preferred_contact_channel?: string | null
+          role_title?: string | null
+          stakeholder_type?: Database["public"]["Enums"]["stakeholder_type"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          organization_id?: string | null
+          phone?: string | null
+          preferred_contact_channel?: string | null
+          role_title?: string | null
+          stakeholder_type?: Database["public"]["Enums"]["stakeholder_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stakeholders_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      supplier_condominiums: {
+        Row: {
+          condominium_id: string
+          created_at: string
+          id: string
+          service_description: string | null
+          supplier_id: string
+        }
+        Insert: {
+          condominium_id: string
+          created_at?: string
+          id?: string
+          service_description?: string | null
+          supplier_id: string
+        }
+        Update: {
+          condominium_id?: string
+          created_at?: string
+          id?: string
+          service_description?: string | null
+          supplier_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_condominiums_condominium_id_fkey"
+            columns: ["condominium_id"]
+            isOneToOne: false
+            referencedRelation: "condominiums"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_condominiums_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      suppliers: {
+        Row: {
+          active: boolean
+          address: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          nif: string | null
+          notes: string | null
+          organization_id: string | null
+          phone: string | null
+          supplier_category: Database["public"]["Enums"]["supplier_category"]
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          address?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          nif?: string | null
+          notes?: string | null
+          organization_id?: string | null
+          phone?: string | null
+          supplier_category?: Database["public"]["Enums"]["supplier_category"]
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          address?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          nif?: string | null
+          notes?: string | null
+          organization_id?: string | null
+          phone?: string | null
+          supplier_category?: Database["public"]["Enums"]["supplier_category"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "suppliers_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -132,7 +413,24 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      stakeholder_type:
+        | "administrador"
+        | "condomino"
+        | "advogado"
+        | "seguradora"
+        | "tecnico"
+        | "entidade_publica"
+        | "outro"
+      supplier_category:
+        | "elevadores"
+        | "portoes"
+        | "eletricidade"
+        | "canalizacao"
+        | "limpeza"
+        | "obras"
+        | "seguros"
+        | "juridico"
+        | "outros"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -259,6 +557,27 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      stakeholder_type: [
+        "administrador",
+        "condomino",
+        "advogado",
+        "seguradora",
+        "tecnico",
+        "entidade_publica",
+        "outro",
+      ],
+      supplier_category: [
+        "elevadores",
+        "portoes",
+        "eletricidade",
+        "canalizacao",
+        "limpeza",
+        "obras",
+        "seguros",
+        "juridico",
+        "outros",
+      ],
+    },
   },
 } as const
