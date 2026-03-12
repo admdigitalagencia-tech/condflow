@@ -10,7 +10,7 @@ const priorityStyles: Record<string, string> = {
 
 export function PriorityBadge({ priority }: { priority: string }) {
   return (
-    <Badge variant="outline" className={cn('text-[11px]', priorityStyles[priority])}>
+    <Badge variant="outline" className={cn('text-[11px] font-medium rounded-md px-2 py-0.5', priorityStyles[priority])}>
       {priority}
     </Badge>
   );

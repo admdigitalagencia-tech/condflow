@@ -17,10 +17,15 @@ const statusStyles: Record<string, string> = {
   'inactive': 'badge-status-closed',
 };
 
+const statusLabels: Record<string, string> = {
+  'active': 'Ativo',
+  'inactive': 'Inativo',
+};
+
 export function StatusBadge({ status }: { status: string }) {
   return (
-    <Badge variant="outline" className={cn('text-[11px]', statusStyles[status])}>
-      {status}
+    <Badge variant="outline" className={cn('text-[11px] font-medium rounded-md px-2 py-0.5', statusStyles[status])}>
+      {statusLabels[status] || status}
     </Badge>
   );
 }

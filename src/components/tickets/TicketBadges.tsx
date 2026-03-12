@@ -17,7 +17,7 @@ const priorityLabels: Record<string, string> = {
 
 export function TicketPriorityBadge({ priority }: { priority: string }) {
   return (
-    <Badge variant="outline" className={cn('text-[11px]', priorityStyles[priority])}>
+    <Badge variant="outline" className={cn('text-[11px] font-medium rounded-md px-2 py-0.5', priorityStyles[priority])}>
       {priorityLabels[priority] || priority}
     </Badge>
   );
@@ -45,7 +45,7 @@ const statusLabels: Record<string, string> = {
 
 export function TicketStatusBadge({ status }: { status: string }) {
   return (
-    <Badge variant="outline" className={cn('text-[11px]', statusStyles[status])}>
+    <Badge variant="outline" className={cn('text-[11px] font-medium rounded-md px-2 py-0.5', statusStyles[status])}>
       {statusLabels[status] || status}
     </Badge>
   );
