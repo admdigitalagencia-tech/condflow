@@ -6,6 +6,7 @@ import { useStakeholders } from '@/hooks/useStakeholders';
 import { useSuppliersByCondominium, useLinkSupplier, useUnlinkSupplier } from '@/hooks/useSuppliers';
 import { useSuppliers } from '@/hooks/useSuppliers';
 import { useCondominiumNotes, useCreateNote, useDeleteNote } from '@/hooks/useCondominiumNotes';
+import { useActivityLogs } from '@/hooks/useActivityLogs';
 import { useTicketsByCondominium } from '@/hooks/useTickets';
 import { useAssembliesByCondominium } from '@/hooks/useAssemblies';
 import { useDocumentsByCondominium } from '@/hooks/useDocuments';
