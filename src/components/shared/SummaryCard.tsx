@@ -10,12 +10,14 @@ interface SummaryCardProps {
 
 export function SummaryCard({ title, children, action, className }: SummaryCardProps) {
   return (
-    <Card className={className}>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-semibold">{title}</CardTitle>
+    <Card className={cn('shadow-sm border-border/60', className)}>
+      <CardHeader className="flex flex-row items-center justify-between pb-3">
+        <CardTitle className="text-sm font-semibold tracking-tight">{title}</CardTitle>
         {action}
       </CardHeader>
       <CardContent>{children}</CardContent>
     </Card>
   );
 }
+
+import { cn } from '@/lib/utils';
