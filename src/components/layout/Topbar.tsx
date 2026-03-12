@@ -42,6 +42,11 @@ export function Topbar() {
           </DropdownMenuContent>
         </DropdownMenu>
 
+        {/* Theme toggle */}
+        <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground transition-colors">
+          {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+        </Button>
+
         {/* Notifications */}
         <Button variant="ghost" size="icon" className="relative h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground transition-colors">
           <Bell className="h-4 w-4" />
