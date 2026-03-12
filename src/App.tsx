@@ -10,7 +10,7 @@ import Dashboard from '@/pages/Dashboard';
 import Condominios from '@/pages/Condominios';
 import CondominioDetail from '@/pages/CondominioDetail';
 import Ocorrencias from '@/pages/Ocorrencias';
-import Assembleias from '@/pages/Assembleias';
+import OcorrenciaDetail from '@/pages/OcorrenciaDetail';
 import Documentos from '@/pages/Documentos';
 import Stakeholders from '@/pages/Stakeholders';
 import Fornecedores from '@/pages/Fornecedores';
