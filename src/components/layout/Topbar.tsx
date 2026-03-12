@@ -1,4 +1,4 @@
-import { Search, Bell, Plus, ChevronDown, LogOut, Settings, User } from 'lucide-react';
+import { Search, Bell, Plus, ChevronDown, Settings, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SidebarTrigger } from '@/components/ui/sidebar';
@@ -6,11 +6,9 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 export function Topbar() {
-  const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
   return (
@@ -53,17 +51,15 @@ export function Topbar() {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="gap-2 h-9 px-2">
               <div className="h-7 w-7 rounded-full bg-accent flex items-center justify-center">
-                <span className="text-xs font-semibold text-accent-foreground">
-                  {user?.email?.charAt(0).toUpperCase() || 'U'}
-                </span>
+                <span className="text-xs font-semibold text-accent-foreground">G</span>
               </div>
               <ChevronDown className="h-3.5 w-3.5 text-muted-foreground hidden sm:block" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <div className="px-3 py-2">
-              <p className="text-sm font-medium">{user?.user_metadata?.full_name || 'Utilizador'}</p>
-              <p className="text-xs text-muted-foreground">{user?.email}</p>
+              <p className="text-sm font-medium">Gestor</p>
+              <p className="text-xs text-muted-foreground">gestor@condominios.pt</p>
             </div>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => navigate('/configuracoes')}>
@@ -71,10 +67,6 @@ export function Topbar() {
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => navigate('/configuracoes')}>
               <User className="h-4 w-4 mr-2" /> Perfil
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={signOut} className="text-destructive">
-              <LogOut className="h-4 w-4 mr-2" /> Sair
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
