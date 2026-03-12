@@ -22,6 +22,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { SummaryCard } from '@/components/shared/SummaryCard';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { TimelineItem } from '@/components/shared/TimelineItem';
+import { ActivityTimeline } from '@/components/timeline/ActivityTimeline';
 import { CondominiumFormDialog } from '@/components/condominiums/CondominiumFormDialog';
 import { TicketPriorityBadge, TicketStatusBadge } from '@/components/tickets/TicketBadges';
 import { categoryLabel } from '@/services/tickets';
