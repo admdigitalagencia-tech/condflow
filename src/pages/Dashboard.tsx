@@ -1,11 +1,12 @@
 import {
   Building2, AlertTriangle, Calendar, Clock, AlertOctagon,
-  ArrowRight, CheckCircle2, BookOpen,
+  ArrowRight, CheckCircle2, BookOpen, ListChecks,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCondominiums } from '@/hooks/useCondominiums';
 import { useTickets, useTicketStats } from '@/hooks/useTickets';
 import { useAssemblyStats } from '@/hooks/useAssemblies';
+import { useTaskStats } from '@/hooks/useTasks';
 import { TicketPriorityBadge, TicketStatusBadge } from '@/components/tickets/TicketBadges';
 import { categoryLabel } from '@/services/tickets';
 import { PageHeader } from '@/components/shared/PageHeader';
@@ -19,6 +20,7 @@ export default function Dashboard() {
   const { data: stats } = useTicketStats();
   const { data: tickets } = useTickets();
   const { data: assemblyStats } = useAssemblyStats();
+  const { data: taskStats } = useTaskStats();
 
   const activeCount = (condominiums || []).filter(c => c.active).length;
   const recentTickets = (tickets || []).slice(0, 5);
@@ -61,11 +63,34 @@ export default function Dashboard() {
         </SummaryCard>
 
         <div className="space-y-6">
-          <SummaryCard title="Agenda da Semana">
-            <div className="flex flex-col items-center gap-2 py-6 text-muted-foreground">
-              <Calendar className="h-5 w-5 opacity-40" />
-              <p className="text-sm">Nenhum evento esta semana</p>
-            </div>
+          <SummaryCard title="Tarefas Pendentes" action={
+            <Button variant="ghost" size="sm" className="text-xs gap-1 text-muted-foreground hover:text-foreground" onClick={() => nav('/tarefas')}>Ver todas <ArrowRight className="h-3 w-3" /></Button>
+          }>
+            {taskStats && (taskStats.total > 0) ? (
+              <div className="space-y-3 py-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Atrasadas</span>
+                  <span className={`text-sm font-semibold ${taskStats.overdue > 0 ? 'text-destructive' : ''}`}>{taskStats.overdue}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Urgentes</span>
+                  <span className={`text-sm font-semibold ${taskStats.urgent > 0 ? 'text-orange-600 dark:text-orange-400' : ''}`}>{taskStats.urgent}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Para hoje</span>
+                  <span className="text-sm font-semibold">{taskStats.today}</span>
+                </div>
+                <div className="flex items-center justify-between border-t pt-2">
+                  <span className="text-sm font-medium">Total ativas</span>
+                  <span className="text-sm font-bold">{taskStats.total}</span>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center gap-2 py-6 text-muted-foreground">
+                <ListChecks className="h-5 w-5 opacity-40" />
+                <p className="text-sm">Nenhuma tarefa pendente</p>
+              </div>
+            )}
           </SummaryCard>
           <SummaryCard title="Deliberações Pendentes">
             <div className="flex flex-col items-center gap-2 py-6 text-muted-foreground">
