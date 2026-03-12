@@ -131,6 +131,9 @@ export default function CondominioDetail() {
       <Tabs defaultValue="geral">
         <TabsList>
           <TabsTrigger value="geral">Visão Geral</TabsTrigger>
+          <TabsTrigger value="ocorrencias">
+            Ocorrências {tickets?.length ? `(${tickets.length})` : ''}
+          </TabsTrigger>
           <TabsTrigger value="stakeholders">
             Stakeholders {stakeholderLinks?.length ? `(${stakeholderLinks.length})` : ''}
           </TabsTrigger>
