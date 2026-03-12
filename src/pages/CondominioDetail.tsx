@@ -6,6 +6,7 @@ import { useStakeholders } from '@/hooks/useStakeholders';
 import { useSuppliersByCondominium, useLinkSupplier, useUnlinkSupplier } from '@/hooks/useSuppliers';
 import { useSuppliers } from '@/hooks/useSuppliers';
 import { useCondominiumNotes, useCreateNote, useDeleteNote } from '@/hooks/useCondominiumNotes';
+import { useTicketsByCondominium } from '@/hooks/useTickets';
 import { STAKEHOLDER_TYPES } from '@/services/stakeholders';
 import { SUPPLIER_CATEGORIES } from '@/services/suppliers';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -17,9 +18,11 @@ import { SummaryCard } from '@/components/shared/SummaryCard';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { TimelineItem } from '@/components/shared/TimelineItem';
 import { CondominiumFormDialog } from '@/components/condominiums/CondominiumFormDialog';
+import { TicketPriorityBadge, TicketStatusBadge } from '@/components/tickets/TicketBadges';
+import { categoryLabel } from '@/services/tickets';
 import {
   ArrowLeft, Building2, Pencil, Users, Truck, History, StickyNote,
-  Plus, X, Mail, Phone,
+  Plus, X, Mail, Phone, AlertTriangle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -32,6 +35,7 @@ export default function CondominioDetail() {
   const { data: supplierLinks } = useSuppliersByCondominium(id!);
   const { data: allSuppliers } = useSuppliers();
   const { data: notes } = useCondominiumNotes(id!);
+  const { data: tickets } = useTicketsByCondominium(id!);
   const createNoteMutation = useCreateNote();
   const deleteNoteMutation = useDeleteNote(id!);
   const linkStakeholder = useLinkStakeholder();
@@ -127,6 +131,9 @@ export default function CondominioDetail() {
       <Tabs defaultValue="geral">
         <TabsList>
           <TabsTrigger value="geral">Visão Geral</TabsTrigger>
+          <TabsTrigger value="ocorrencias">
+            Ocorrências {tickets?.length ? `(${tickets.length})` : ''}
+          </TabsTrigger>
           <TabsTrigger value="stakeholders">
             Stakeholders {stakeholderLinks?.length ? `(${stakeholderLinks.length})` : ''}
           </TabsTrigger>
@@ -168,16 +175,40 @@ export default function CondominioDetail() {
               )}
             </SummaryCard>
 
-            {/* Reserved space for future KPIs */}
             <SummaryCard title="Indicadores" className="md:col-span-2">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-4">
-                <PlaceholderKPI label="Ocorrências Abertas" value="—" />
+                <PlaceholderKPI label="Ocorrências Abertas" value={String((tickets || []).filter(t => !['resolvido','encerrado'].includes(t.status)).length)} />
+                <PlaceholderKPI label="Críticas" value={String((tickets || []).filter(t => t.priority === 'critica' && !['resolvido','encerrado'].includes(t.status)).length)} />
                 <PlaceholderKPI label="Assembleias Agendadas" value="—" />
                 <PlaceholderKPI label="Documentos" value="—" />
-                <PlaceholderKPI label="Custos (mês)" value="—" />
               </div>
             </SummaryCard>
           </div>
+        </TabsContent>
+
+        {/* ---- OCORRÊNCIAS ---- */}
+        <TabsContent value="ocorrencias" className="mt-4 space-y-4">
+          {(!tickets || tickets.length === 0) ? (
+            <EmptyState icon={AlertTriangle} title="Sem ocorrências" description="Nenhuma ocorrência registada para este condomínio." />
+          ) : (
+            <div className="space-y-2">
+              {tickets.map(t => (
+                <div key={t.id} className="rounded-lg border bg-card p-4 cursor-pointer hover:shadow-md transition-shadow flex items-center justify-between" onClick={() => nav(`/ocorrencias/${t.id}`)}>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-mono text-[10px] text-muted-foreground">{t.code}</span>
+                      <span className="text-xs text-muted-foreground">{categoryLabel(t.category)}</span>
+                    </div>
+                    <p className="text-sm font-medium truncate">{t.title}</p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0 ml-3">
+                    <TicketPriorityBadge priority={t.priority} />
+                    <TicketStatusBadge status={t.status} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </TabsContent>
 
         {/* ---- STAKEHOLDERS ---- */}

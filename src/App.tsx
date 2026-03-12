@@ -10,6 +10,7 @@ import Dashboard from '@/pages/Dashboard';
 import Condominios from '@/pages/Condominios';
 import CondominioDetail from '@/pages/CondominioDetail';
 import Ocorrencias from '@/pages/Ocorrencias';
+import OcorrenciaDetail from '@/pages/OcorrenciaDetail';
 import Assembleias from '@/pages/Assembleias';
 import Documentos from '@/pages/Documentos';
 import Stakeholders from '@/pages/Stakeholders';
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/condominios" element={<Condominios />} />
             <Route path="/condominios/:id" element={<CondominioDetail />} />
             <Route path="/ocorrencias" element={<Ocorrencias />} />
+            <Route path="/ocorrencias/:id" element={<OcorrenciaDetail />} />
             <Route path="/assembleias" element={<Assembleias />} />
             <Route path="/documentos" element={<Documentos />} />
             <Route path="/stakeholders" element={<Stakeholders />} />

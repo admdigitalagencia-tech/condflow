@@ -405,6 +405,214 @@ export type Database = {
           },
         ]
       }
+      ticket_costs: {
+        Row: {
+          amount: number
+          cost_type: string
+          created_at: string
+          created_by: string | null
+          description: string
+          id: string
+          supplier_id: string | null
+          ticket_id: string
+        }
+        Insert: {
+          amount?: number
+          cost_type?: string
+          created_at?: string
+          created_by?: string | null
+          description: string
+          id?: string
+          supplier_id?: string | null
+          ticket_id: string
+        }
+        Update: {
+          amount?: number
+          cost_type?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          id?: string
+          supplier_id?: string | null
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_costs_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_costs_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ticket_updates: {
+        Row: {
+          body: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          new_status: Database["public"]["Enums"]["ticket_status"] | null
+          old_status: Database["public"]["Enums"]["ticket_status"] | null
+          organization_id: string | null
+          ticket_id: string
+          update_type: Database["public"]["Enums"]["ticket_update_type"]
+          visibility: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          new_status?: Database["public"]["Enums"]["ticket_status"] | null
+          old_status?: Database["public"]["Enums"]["ticket_status"] | null
+          organization_id?: string | null
+          ticket_id: string
+          update_type?: Database["public"]["Enums"]["ticket_update_type"]
+          visibility?: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          new_status?: Database["public"]["Enums"]["ticket_status"] | null
+          old_status?: Database["public"]["Enums"]["ticket_status"] | null
+          organization_id?: string | null
+          ticket_id?: string
+          update_type?: Database["public"]["Enums"]["ticket_update_type"]
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_updates_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ticket_updates_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tickets: {
+        Row: {
+          approved_cost: number | null
+          assigned_user_id: string | null
+          category: Database["public"]["Enums"]["ticket_category"]
+          closed_at: string | null
+          closure_summary: string | null
+          code: string
+          condominium_id: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          due_date: string | null
+          estimated_cost: number | null
+          id: string
+          last_activity_at: string
+          location_text: string | null
+          opened_at: string
+          organization_id: string | null
+          priority: Database["public"]["Enums"]["ticket_priority"]
+          severity_score: number | null
+          source_channel: string | null
+          status: Database["public"]["Enums"]["ticket_status"]
+          subcategory: string | null
+          supplier_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          approved_cost?: number | null
+          assigned_user_id?: string | null
+          category?: Database["public"]["Enums"]["ticket_category"]
+          closed_at?: string | null
+          closure_summary?: string | null
+          code?: string
+          condominium_id: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          estimated_cost?: number | null
+          id?: string
+          last_activity_at?: string
+          location_text?: string | null
+          opened_at?: string
+          organization_id?: string | null
+          priority?: Database["public"]["Enums"]["ticket_priority"]
+          severity_score?: number | null
+          source_channel?: string | null
+          status?: Database["public"]["Enums"]["ticket_status"]
+          subcategory?: string | null
+          supplier_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          approved_cost?: number | null
+          assigned_user_id?: string | null
+          category?: Database["public"]["Enums"]["ticket_category"]
+          closed_at?: string | null
+          closure_summary?: string | null
+          code?: string
+          condominium_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          estimated_cost?: number | null
+          id?: string
+          last_activity_at?: string
+          location_text?: string | null
+          opened_at?: string
+          organization_id?: string | null
+          priority?: Database["public"]["Enums"]["ticket_priority"]
+          severity_score?: number | null
+          source_channel?: string | null
+          status?: Database["public"]["Enums"]["ticket_status"]
+          subcategory?: string | null
+          supplier_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tickets_condominium_id_fkey"
+            columns: ["condominium_id"]
+            isOneToOne: false
+            referencedRelation: "condominiums"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tickets_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tickets_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -431,6 +639,31 @@ export type Database = {
         | "seguros"
         | "juridico"
         | "outros"
+      ticket_category:
+        | "infiltracao"
+        | "portao"
+        | "elevador"
+        | "eletricidade"
+        | "canalizacao"
+        | "limpeza"
+        | "estrutural"
+        | "administrativo"
+        | "sinistro"
+      ticket_priority: "baixa" | "media" | "alta" | "critica"
+      ticket_status:
+        | "aberto"
+        | "em_analise"
+        | "orcamento_solicitado"
+        | "aguardando_aprovacao"
+        | "em_execucao"
+        | "resolvido"
+        | "encerrado"
+      ticket_update_type:
+        | "comment"
+        | "status_change"
+        | "assignment"
+        | "cost_update"
+        | "system"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -577,6 +810,34 @@ export const Constants = {
         "seguros",
         "juridico",
         "outros",
+      ],
+      ticket_category: [
+        "infiltracao",
+        "portao",
+        "elevador",
+        "eletricidade",
+        "canalizacao",
+        "limpeza",
+        "estrutural",
+        "administrativo",
+        "sinistro",
+      ],
+      ticket_priority: ["baixa", "media", "alta", "critica"],
+      ticket_status: [
+        "aberto",
+        "em_analise",
+        "orcamento_solicitado",
+        "aguardando_aprovacao",
+        "em_execucao",
+        "resolvido",
+        "encerrado",
+      ],
+      ticket_update_type: [
+        "comment",
+        "status_change",
+        "assignment",
+        "cost_update",
+        "system",
       ],
     },
   },
