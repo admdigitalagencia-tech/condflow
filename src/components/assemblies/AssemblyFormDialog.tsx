@@ -22,12 +22,15 @@ export function AssemblyFormDialog({ open, onOpenChange, assembly }: Props) {
   const updateMutation = useUpdateAssembly();
   const isEdit = !!assembly;
 
+  const today = new Date().toISOString().split('T')[0];
+  const nowTime = new Date().toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit', hour12: false });
+
   const [form, setForm] = useState({
     condominium_id: assembly?.condominium_id || '',
     title: assembly?.title || '',
     assembly_type: assembly?.assembly_type || 'ordinaria',
-    scheduled_date: assembly?.scheduled_date || '',
-    scheduled_time: assembly?.scheduled_time?.slice(0, 5) || '',
+    scheduled_date: assembly?.scheduled_date || today,
+    scheduled_time: assembly?.scheduled_time?.slice(0, 5) || nowTime,
     location: assembly?.location || '',
     agenda_text: assembly?.agenda_text || '',
     notes: assembly?.notes || '',

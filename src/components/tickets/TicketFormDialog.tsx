@@ -67,7 +67,7 @@ export function TicketFormDialog({ open, onOpenChange, ticket, defaultCondominiu
       location_text: form.location_text || null,
       source_channel: form.source_channel || null,
       priority: form.priority as any,
-      supplier_id: form.supplier_id || null,
+      supplier_id: form.supplier_id && form.supplier_id !== 'none' ? form.supplier_id : null,
       due_date: form.due_date || null,
       estimated_cost: form.estimated_cost ? parseFloat(form.estimated_cost) : null,
     };
@@ -168,7 +168,7 @@ export function TicketFormDialog({ open, onOpenChange, ticket, defaultCondominiu
               <Select value={form.supplier_id} onValueChange={v => set('supplier_id', v)}>
                 <SelectTrigger><SelectValue placeholder="Selecionar..." /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Nenhum</SelectItem>
+                  <SelectItem value="none">Nenhum</SelectItem>
                   {(suppliers || []).filter(s => s.active).map(s => (
                     <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
                   ))}
