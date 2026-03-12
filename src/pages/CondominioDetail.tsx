@@ -41,6 +41,7 @@ export default function CondominioDetail() {
   const { data: supplierLinks } = useSuppliersByCondominium(id!);
   const { data: allSuppliers } = useSuppliers();
   const { data: notes } = useCondominiumNotes(id!);
+  const { data: activityLogs, isLoading: logsLoading } = useActivityLogs(id!);
   const { data: tickets } = useTicketsByCondominium(id!);
   const { data: assemblies } = useAssembliesByCondominium(id!);
   const { data: documents } = useDocumentsByCondominium(id!);
