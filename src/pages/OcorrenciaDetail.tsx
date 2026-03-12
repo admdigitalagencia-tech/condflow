@@ -5,7 +5,7 @@ import { TICKET_STATUSES, categoryLabel, statusLabel, priorityLabel, type Ticket
 import { TicketPriorityBadge, TicketStatusBadge } from '@/components/tickets/TicketBadges';
 import { TicketFormDialog } from '@/components/tickets/TicketFormDialog';
 import { SummaryCard } from '@/components/shared/SummaryCard';
-import { AIAssistantPanel, FileText as AIFileText, MessageSquare as AIMessageSquare, ListChecks as AIListChecks } from '@/components/ai/AIAssistantPanel';
+import { AIAssistantPanel } from '@/components/ai/AIAssistantPanel';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
