@@ -23,7 +23,7 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import { AssemblyFormDialog } from '@/components/assemblies/AssemblyFormDialog';
 import {
   ArrowLeft, Pencil, Plus, X, ListOrdered, Users, FileText,
-  Mic, BookOpen, StickyNote, Brain, Upload, GripVertical, Vote,
+  Mic, BookOpen, StickyNote, Brain, Upload, GripVertical, Vote, ListChecks,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
