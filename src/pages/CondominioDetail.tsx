@@ -6,6 +6,7 @@ import { useStakeholders } from '@/hooks/useStakeholders';
 import { useSuppliersByCondominium, useLinkSupplier, useUnlinkSupplier } from '@/hooks/useSuppliers';
 import { useSuppliers } from '@/hooks/useSuppliers';
 import { useCondominiumNotes, useCreateNote, useDeleteNote } from '@/hooks/useCondominiumNotes';
+import { useTicketsByCondominium } from '@/hooks/useTickets';
 import { STAKEHOLDER_TYPES } from '@/services/stakeholders';
 import { SUPPLIER_CATEGORIES } from '@/services/suppliers';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
