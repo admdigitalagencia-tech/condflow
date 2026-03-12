@@ -18,9 +18,11 @@ import { SummaryCard } from '@/components/shared/SummaryCard';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { TimelineItem } from '@/components/shared/TimelineItem';
 import { CondominiumFormDialog } from '@/components/condominiums/CondominiumFormDialog';
+import { TicketPriorityBadge, TicketStatusBadge } from '@/components/tickets/TicketBadges';
+import { categoryLabel } from '@/services/tickets';
 import {
   ArrowLeft, Building2, Pencil, Users, Truck, History, StickyNote,
-  Plus, X, Mail, Phone,
+  Plus, X, Mail, Phone, AlertTriangle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
