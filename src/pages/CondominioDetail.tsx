@@ -35,6 +35,7 @@ export default function CondominioDetail() {
   const { data: supplierLinks } = useSuppliersByCondominium(id!);
   const { data: allSuppliers } = useSuppliers();
   const { data: notes } = useCondominiumNotes(id!);
+  const { data: tickets } = useTicketsByCondominium(id!);
   const createNoteMutation = useCreateNote();
   const deleteNoteMutation = useDeleteNote(id!);
   const linkStakeholder = useLinkStakeholder();
