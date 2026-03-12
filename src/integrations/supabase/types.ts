@@ -654,33 +654,45 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          date_format: string | null
           email: string | null
           full_name: string | null
           id: string
           phone: string | null
+          preferred_language: string | null
+          role_title: string | null
           status: string
+          timezone: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          date_format?: string | null
           email?: string | null
           full_name?: string | null
           id?: string
           phone?: string | null
+          preferred_language?: string | null
+          role_title?: string | null
           status?: string
+          timezone?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
+          date_format?: string | null
           email?: string | null
           full_name?: string | null
           id?: string
           phone?: string | null
+          preferred_language?: string | null
+          role_title?: string | null
           status?: string
+          timezone?: string | null
           updated_at?: string
           user_id?: string
         }
