@@ -414,21 +414,47 @@ export default function AssembleiaDetail() {
             </div>
           </SummaryCard>
 
-          {/* AI placeholder */}
-          <SummaryCard title="Assistente IA">
-            <div className="rounded-md bg-muted/50 p-3 border border-dashed">
-              <div className="flex items-center gap-2 mb-2">
-                <Brain className="h-4 w-4 text-accent" />
-                <span className="text-xs font-semibold text-accent">IA para Atas — em breve</span>
-              </div>
-              <ul className="space-y-1.5 text-xs text-muted-foreground">
-                <li>• Gerar rascunho automático</li>
-                <li>• Resumo executivo</li>
-                <li>• Extrair deliberações</li>
-                <li>• Sugerir tarefas pós-assembleia</li>
-              </ul>
-            </div>
-          </SummaryCard>
+          {/* AI Assistant */}
+          <AIAssistantPanel
+            title="Assistente IA"
+            actions={[
+              {
+                label: 'Gerar resumo da assembleia',
+                feature: 'assembly_summary',
+                icon: BookOpen,
+                buildPrompt: () => {
+                  const pointsText = (points || []).map(p =>
+                    `${p.point_order}. ${p.title}${p.deliberation_text ? ` — Deliberação: ${p.deliberation_text}` : ''}${p.voting_result_text ? ` — Votação: ${p.voting_result_text}` : ''}`
+                  ).join('\n');
+                  const attendeesCount = attendees?.length || 0;
+                  return `Analisa esta assembleia e gera um resumo completo:\n\nTítulo: ${assembly.title}\nTipo: ${assemblyTypeLabel(assembly.assembly_type)}\nData: ${formatDate(assembly.scheduled_date)}\nCondomínio: ${(assembly as any).condominiums?.name || 'N/A'}\nPresidida por: ${assembly.chaired_by || 'N/A'}\nParticipantes: ${attendeesCount}\n\nOrdem de Trabalhos:\n${pointsText || 'Sem pontos definidos'}\n\nNotas do gestor: ${assembly.notes || 'Sem notas'}`;
+                },
+              },
+              {
+                label: 'Sugerir tarefas pós-assembleia',
+                feature: 'next_steps',
+                icon: ListChecks,
+                buildPrompt: () => {
+                  const pointsText = (points || []).map(p =>
+                    `${p.point_order}. ${p.title}${p.deliberation_text ? ` — Deliberação: ${p.deliberation_text}` : ''}`
+                  ).join('\n');
+                  return `Com base nesta assembleia, sugere as tarefas que o gestor deve executar após a reunião:\n\nTítulo: ${assembly.title}\nCondomínio: ${(assembly as any).condominiums?.name || 'N/A'}\n\nDeliberações:\n${pointsText || 'Sem deliberações'}`;
+                },
+              },
+              {
+                label: 'Gerar rascunho de ata',
+                feature: 'assembly_summary',
+                icon: FileText,
+                buildPrompt: () => {
+                  const pointsText = (points || []).map(p =>
+                    `${p.point_order}. ${p.title}\n   Discussão: ${p.discussion_summary || 'N/A'}\n   Proposta: ${p.proposal_text || 'N/A'}\n   Votação: ${p.voting_result_text || 'N/A'}\n   Deliberação: ${p.deliberation_text || 'N/A'}`
+                  ).join('\n\n');
+                  const attendeesList = (attendees || []).map(a => `- ${a.attendee_name} (${a.unit_code || 'S/F'}, ${a.attendance_type})`).join('\n');
+                  return `Gera um rascunho formal de ata para esta assembleia:\n\nTítulo: ${assembly.title}\nTipo: ${assemblyTypeLabel(assembly.assembly_type)}\nData: ${formatDate(assembly.scheduled_date)}${assembly.scheduled_time ? ` às ${assembly.scheduled_time.slice(0, 5)}` : ''}\nLocal: ${assembly.location || 'N/A'}\nPresidida por: ${assembly.chaired_by || 'N/A'}\nCondomínio: ${(assembly as any).condominiums?.name || 'N/A'}\n\nParticipantes:\n${attendeesList || 'Sem participantes'}\n\nOrdem de Trabalhos:\n${pointsText || 'Sem pontos'}\n\nNotas: ${assembly.notes || 'Sem notas'}`;
+                },
+              },
+            ]}
+          />
         </div>
       </div>
 
