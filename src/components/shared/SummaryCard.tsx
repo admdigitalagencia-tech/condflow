@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 
 interface SummaryCardProps {
   title: string;
@@ -19,5 +20,3 @@ export function SummaryCard({ title, children, action, className }: SummaryCardP
     </Card>
   );
 }
-
-import { cn } from '@/lib/utils';
