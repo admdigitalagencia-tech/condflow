@@ -18,6 +18,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SummaryCard } from '@/components/shared/SummaryCard';
+import { AIAssistantPanel } from '@/components/ai/AIAssistantPanel';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { AssemblyFormDialog } from '@/components/assemblies/AssemblyFormDialog';
 import {
