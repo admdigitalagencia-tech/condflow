@@ -12,6 +12,8 @@ import CondominioDetail from '@/pages/CondominioDetail';
 import Ocorrencias from '@/pages/Ocorrencias';
 import OcorrenciaDetail from '@/pages/OcorrenciaDetail';
 import Assembleias from '@/pages/Assembleias';
+import AssembleiaDetail from '@/pages/AssembleiaDetail';
+import MinutesEditor from '@/pages/MinutesEditor';
 import Documentos from '@/pages/Documentos';
 import Stakeholders from '@/pages/Stakeholders';
 import Fornecedores from '@/pages/Fornecedores';
@@ -37,6 +39,8 @@ const App = () => (
             <Route path="/ocorrencias" element={<Ocorrencias />} />
             <Route path="/ocorrencias/:id" element={<OcorrenciaDetail />} />
             <Route path="/assembleias" element={<Assembleias />} />
+            <Route path="/assembleias/:id" element={<AssembleiaDetail />} />
+            <Route path="/assembleias/:id/ata/:minuteId" element={<MinutesEditor />} />
             <Route path="/documentos" element={<Documentos />} />
             <Route path="/stakeholders" element={<Stakeholders />} />
             <Route path="/fornecedores" element={<Fornecedores />} />
