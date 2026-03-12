@@ -18,6 +18,7 @@ const mainItems = [
   { title: 'Documentos', url: '/documentos', icon: FileText },
   { title: 'Stakeholders', url: '/stakeholders', icon: Users },
   { title: 'Fornecedores', url: '/fornecedores', icon: Truck },
+  { title: 'Tarefas', url: '/tarefas', icon: ListChecks },
   { title: 'Agenda', url: '/agenda', icon: CalendarDays },
 ];
 

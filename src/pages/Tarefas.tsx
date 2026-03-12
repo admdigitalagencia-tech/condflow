@@ -45,11 +45,11 @@ export default function Tarefas() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Tarefas" description="Gestão de tarefas operacionais">
+      <PageHeader title="Tarefas" description="Gestão de tarefas operacionais" actions={
         <Button onClick={() => { setEditTask(null); setDialogOpen(true); }} className="gap-2">
           <Plus className="h-4 w-4" /> Nova Tarefa
         </Button>
-      </PageHeader>
+      } />
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
