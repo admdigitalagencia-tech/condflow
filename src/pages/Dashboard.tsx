@@ -1,10 +1,11 @@
 import {
   Building2, AlertTriangle, Calendar, FileText, Clock, AlertOctagon,
-  ArrowRight, CheckCircle2,
+  ArrowRight, CheckCircle2, BookOpen,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCondominiums } from '@/hooks/useCondominiums';
 import { useTickets, useTicketStats } from '@/hooks/useTickets';
+import { useAssemblyStats } from '@/hooks/useAssemblies';
 import { TicketPriorityBadge, TicketStatusBadge } from '@/components/tickets/TicketBadges';
 import { categoryLabel } from '@/services/tickets';
 import { PageHeader } from '@/components/shared/PageHeader';
@@ -17,6 +18,7 @@ export default function Dashboard() {
   const { data: condominiums } = useCondominiums();
   const { data: stats } = useTicketStats();
   const { data: tickets } = useTickets();
+  const { data: assemblyStats } = useAssemblyStats();
 
   const activeCount = (condominiums || []).filter(c => c.active).length;
   const recentTickets = (tickets || []).slice(0, 5);
@@ -30,8 +32,8 @@ export default function Dashboard() {
         <KPICard label="Ocorrências Abertas" value={stats?.open ?? 0} icon={AlertTriangle} variant="warning" onClick={() => nav('/ocorrencias')} />
         <KPICard label="Críticas" value={stats?.critical ?? 0} icon={AlertOctagon} variant={stats?.critical ? 'critical' : 'default'} onClick={() => nav('/ocorrencias')} />
         <KPICard label="Atrasadas" value={stats?.overdue ?? 0} icon={Clock} variant={stats?.overdue ? 'critical' : 'default'} onClick={() => nav('/ocorrencias')} />
-        <KPICard label="Assembleias" value="—" icon={Calendar} onClick={() => nav('/assembleias')} />
-        <KPICard label="Atas Pendentes" value="—" icon={FileText} onClick={() => nav('/assembleias')} />
+        <KPICard label="Assembleias (mês)" value={assemblyStats?.thisMonth ?? 0} icon={Calendar} onClick={() => nav('/assembleias')} />
+        <KPICard label="Atas Pendentes" value={assemblyStats?.pendingMinutes ?? 0} icon={BookOpen} variant={assemblyStats?.pendingMinutes ? 'warning' : 'default'} onClick={() => nav('/assembleias')} />
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
