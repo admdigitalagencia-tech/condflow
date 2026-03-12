@@ -1,17 +1,23 @@
-import { FileText } from "lucide-react";
+import { FileText, Plus } from 'lucide-react';
+import { PageHeader } from '@/components/shared/PageHeader';
+import { EmptyState } from '@/components/shared/EmptyState';
+import { Button } from '@/components/ui/button';
 
 export default function Documentos() {
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Documentos</h1>
-        <p className="text-sm text-muted-foreground">Gestão de documentos vinculados</p>
-      </div>
-      <div className="stat-card flex flex-col items-center justify-center py-12 text-center">
-        <FileText className="h-10 w-10 text-muted-foreground mb-3" />
-        <p className="text-sm text-muted-foreground">Módulo de documentos em desenvolvimento.</p>
-        <p className="text-xs text-muted-foreground mt-1">Upload e gestão de atas, convocatórias, orçamentos e mais.</p>
-      </div>
+    <div className="space-y-4">
+      <PageHeader
+        title="Documentos"
+        description="Upload e gestão de documentos"
+        actions={<Button size="sm" className="gap-1.5"><Plus className="h-3.5 w-3.5" /> Upload</Button>}
+      />
+      <EmptyState
+        icon={FileText}
+        title="Sem documentos"
+        description="Carregue documentos associados a condomínios, ocorrências ou assembleias."
+        actionLabel="Carregar documento"
+        onAction={() => {}}
+      />
     </div>
   );
 }
