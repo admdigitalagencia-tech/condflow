@@ -1,52 +1,50 @@
-import { mockAssembleias } from "@/data/mockData";
-import { Badge } from "@/components/ui/badge";
-import { Calendar } from "lucide-react";
-
-const estadoClass: Record<string, string> = {
-  Agendada: "badge-status-execution",
-  "Em Curso": "badge-status-analysis",
-  Concluída: "badge-status-resolved",
-  Cancelada: "badge-status-closed",
-};
+import { Calendar, Plus } from 'lucide-react';
+import { mockAssembleias } from '@/data/mockData';
+import { PageHeader } from '@/components/shared/PageHeader';
+import { EmptyState } from '@/components/shared/EmptyState';
+import { StatusBadge } from '@/components/shared/StatusBadge';
+import { Button } from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 export default function Assembleias() {
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Assembleias</h1>
-        <p className="text-sm text-muted-foreground">{mockAssembleias.length} assembleias registadas</p>
-      </div>
+    <div className="space-y-4">
+      <PageHeader
+        title="Assembleias"
+        description="Gestão de assembleias e deliberações"
+        actions={<Button size="sm" className="gap-1.5"><Plus className="h-3.5 w-3.5" /> Nova Assembleia</Button>}
+      />
 
-      <div className="space-y-4">
-        {mockAssembleias.map(a => (
-          <div key={a.id} className="stat-card animate-fade-in">
-            <div className="flex items-start justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-accent" />
-                <span className="font-semibold text-sm">{a.condominioNome}</span>
-              </div>
-              <Badge variant="outline" className={`text-[11px] ${estadoClass[a.estado]}`}>
-                {a.estado}
-              </Badge>
-            </div>
-            <div className="flex gap-4 text-xs text-muted-foreground mb-3">
-              <span>{a.tipo}</span>
-              <span>{a.data} às {a.hora}</span>
-              <span>{a.local}</span>
-            </div>
-            <div className="border-t pt-2">
-              <p className="text-xs font-medium text-muted-foreground mb-1">Ordem de Trabalhos:</p>
-              <pre className="text-xs text-foreground whitespace-pre-wrap font-sans">{a.ordemTrabalhos}</pre>
-            </div>
-            {a.notasGestor && (
-              <div className="border-t pt-2 mt-2">
-                <p className="text-xs font-medium text-muted-foreground mb-1">Notas do Gestor:</p>
-                <p className="text-xs text-foreground">{a.notasGestor}</p>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
+      {mockAssembleias.length === 0 ? (
+        <EmptyState icon={Calendar} title="Sem assembleias" description="Agende a primeira assembleia para começar." />
+      ) : (
+        <div className="rounded-lg border bg-card">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Condomínio</TableHead>
+                <TableHead>Tipo</TableHead>
+                <TableHead>Data</TableHead>
+                <TableHead>Hora</TableHead>
+                <TableHead>Local</TableHead>
+                <TableHead>Estado</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {mockAssembleias.map((a) => (
+                <TableRow key={a.id} className="cursor-pointer">
+                  <TableCell className="font-medium">{a.condominioNome}</TableCell>
+                  <TableCell>{a.tipo}</TableCell>
+                  <TableCell>{a.data}</TableCell>
+                  <TableCell>{a.hora}</TableCell>
+                  <TableCell className="text-muted-foreground">{a.local}</TableCell>
+                  <TableCell><StatusBadge status={a.estado} /></TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
     </div>
   );
 }

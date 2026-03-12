@@ -1,17 +1,23 @@
-import { Users } from "lucide-react";
+import { Users, Plus } from 'lucide-react';
+import { PageHeader } from '@/components/shared/PageHeader';
+import { EmptyState } from '@/components/shared/EmptyState';
+import { Button } from '@/components/ui/button';
 
 export default function Stakeholders() {
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Stakeholders</h1>
-        <p className="text-sm text-muted-foreground">Gestão de contactos e intervenientes</p>
-      </div>
-      <div className="stat-card flex flex-col items-center justify-center py-12 text-center">
-        <Users className="h-10 w-10 text-muted-foreground mb-3" />
-        <p className="text-sm text-muted-foreground">Módulo de stakeholders em desenvolvimento.</p>
-        <p className="text-xs text-muted-foreground mt-1">Gestão de contactos, funções e associações por condomínio.</p>
-      </div>
+    <div className="space-y-4">
+      <PageHeader
+        title="Stakeholders"
+        description="Contactos e intervenientes dos condomínios"
+        actions={<Button size="sm" className="gap-1.5"><Plus className="h-3.5 w-3.5" /> Novo Stakeholder</Button>}
+      />
+      <EmptyState
+        icon={Users}
+        title="Sem stakeholders"
+        description="Adicione os contactos e intervenientes dos seus condomínios."
+        actionLabel="Novo Stakeholder"
+        onAction={() => {}}
+      />
     </div>
   );
 }
