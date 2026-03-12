@@ -6,6 +6,7 @@ import { useStakeholders } from '@/hooks/useStakeholders';
 import { useSuppliersByCondominium, useLinkSupplier, useUnlinkSupplier } from '@/hooks/useSuppliers';
 import { useSuppliers } from '@/hooks/useSuppliers';
 import { useCondominiumNotes, useCreateNote, useDeleteNote } from '@/hooks/useCondominiumNotes';
+import { useActivityLogs } from '@/hooks/useActivityLogs';
 import { useTicketsByCondominium } from '@/hooks/useTickets';
 import { useAssembliesByCondominium } from '@/hooks/useAssemblies';
 import { useDocumentsByCondominium } from '@/hooks/useDocuments';
@@ -21,6 +22,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { SummaryCard } from '@/components/shared/SummaryCard';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { TimelineItem } from '@/components/shared/TimelineItem';
+import { ActivityTimeline } from '@/components/timeline/ActivityTimeline';
 import { CondominiumFormDialog } from '@/components/condominiums/CondominiumFormDialog';
 import { TicketPriorityBadge, TicketStatusBadge } from '@/components/tickets/TicketBadges';
 import { categoryLabel } from '@/services/tickets';
@@ -39,6 +41,7 @@ export default function CondominioDetail() {
   const { data: supplierLinks } = useSuppliersByCondominium(id!);
   const { data: allSuppliers } = useSuppliers();
   const { data: notes } = useCondominiumNotes(id!);
+  const { data: activityLogs, isLoading: logsLoading } = useActivityLogs(id!);
   const { data: tickets } = useTicketsByCondominium(id!);
   const { data: assemblies } = useAssembliesByCondominium(id!);
   const { data: documents } = useDocumentsByCondominium(id!);
@@ -281,13 +284,18 @@ export default function CondominioDetail() {
           )}
         </TabsContent>
 
-        {/* HISTÓRICO */}
+        {/* TIMELINE */}
         <TabsContent value="historico" className="mt-4">
-          <SummaryCard title="Histórico de Atividade">
-            <div className="py-2">
-              <TimelineItem date={formatDate(condo.created_at)} title="Condomínio criado" variant="success" />
-              <TimelineItem date={formatDate(condo.updated_at)} title="Última atualização" isLast />
-            </div>
+          <SummaryCard title="Timeline de Eventos">
+            {logsLoading ? (
+              <div className="flex justify-center py-8">
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              </div>
+            ) : (
+              <div className="py-4">
+                <ActivityTimeline logs={activityLogs || []} />
+              </div>
+            )}
           </SummaryCard>
         </TabsContent>
 
