@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_logs: {
+        Row: {
+          action_type: string
+          condominium_id: string
+          created_at: string
+          created_by: string | null
+          description: string
+          id: string
+          metadata_json: Json | null
+          organization_id: string | null
+          related_entity_id: string | null
+          related_entity_type: string
+        }
+        Insert: {
+          action_type: string
+          condominium_id: string
+          created_at?: string
+          created_by?: string | null
+          description: string
+          id?: string
+          metadata_json?: Json | null
+          organization_id?: string | null
+          related_entity_id?: string | null
+          related_entity_type: string
+        }
+        Update: {
+          action_type?: string
+          condominium_id?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          id?: string
+          metadata_json?: Json | null
+          organization_id?: string | null
+          related_entity_id?: string | null
+          related_entity_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_logs_condominium_id_fkey"
+            columns: ["condominium_id"]
+            isOneToOne: false
+            referencedRelation: "condominiums"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activity_logs_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_runs: {
         Row: {
           confidence_score: number | null
