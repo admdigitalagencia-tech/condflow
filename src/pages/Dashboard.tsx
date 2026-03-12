@@ -20,6 +20,7 @@ export default function Dashboard() {
   const { data: stats } = useTicketStats();
   const { data: tickets } = useTickets();
   const { data: assemblyStats } = useAssemblyStats();
+  const { data: taskStats } = useTaskStats();
 
   const activeCount = (condominiums || []).filter(c => c.active).length;
   const recentTickets = (tickets || []).slice(0, 5);
