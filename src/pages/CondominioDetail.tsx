@@ -27,9 +27,11 @@ import { ActivityTimeline } from '@/components/timeline/ActivityTimeline';
 import { CondominiumFormDialog } from '@/components/condominiums/CondominiumFormDialog';
 import { TicketPriorityBadge, TicketStatusBadge } from '@/components/tickets/TicketBadges';
 import { categoryLabel } from '@/services/tickets';
+import { AIAssistantPanel } from '@/components/ai/AIAssistantPanel';
 import {
   ArrowLeft, Building2, Pencil, Users, Truck, History, StickyNote,
   Plus, X, Mail, Phone, AlertTriangle, Calendar, FileText,
+  Brain, ListChecks, MessageSquare,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
