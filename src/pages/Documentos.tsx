@@ -55,16 +55,14 @@ export default function Documentos() {
     return true;
   };
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
+  const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setDragging(false);
     const files = Array.from(e.dataTransfer.files);
-    if (files.length > 0) {
-      if (handleSelectFile(files[0])) {
-        setUploadOpen(true);
-      }
+    if (files.length > 0 && handleSelectFile(files[0])) {
+      setUploadOpen(true);
     }
-  }, []);
+  };
 
   const handleUpload = async () => {
     if (!uploadFile_ || !uploadTitle) return;
