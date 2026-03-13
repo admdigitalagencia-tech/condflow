@@ -254,12 +254,57 @@ export default function OcorrenciaDetail() {
               </SummaryCard>
             </TabsContent>
 
-            {/* Tasks placeholder */}
-            <TabsContent value="tasks" className="mt-4">
-              <div className="rounded-lg border border-dashed p-8 text-center">
-                <CheckSquare className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                <p className="text-sm text-muted-foreground">Gestão de tarefas — em breve</p>
+            <TabsContent value="tasks" className="mt-4 space-y-4">
+              <div className="flex justify-between items-center">
+                <p className="text-sm text-muted-foreground">{ticketTasks.length} tarefa(s) associada(s)</p>
+                <Button size="sm" className="gap-1.5" onClick={() => { setEditingTask(null); setTaskOpen(true); }}>
+                  <Plus className="h-3.5 w-3.5" /> Nova Tarefa
+                </Button>
               </div>
+              {ticketTasks.length === 0 ? (
+                <div className="rounded-lg border border-dashed p-8 text-center">
+                  <CheckSquare className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                  <p className="text-sm text-muted-foreground">Nenhuma tarefa associada a esta ocorrência</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {ticketTasks.map(task => (
+                    <div key={task.id} className="flex items-center gap-3 rounded-lg border p-3 hover:bg-muted/50 transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={task.status === 'concluida'}
+                        onChange={() => {
+                          const done = task.status !== 'concluida';
+                          updateTaskMutation.mutate({
+                            id: task.id,
+                            status: done ? 'concluida' : 'pendente',
+                            completed_at: done ? new Date().toISOString() : null,
+                          });
+                        }}
+                        className="h-4 w-4 rounded border-input accent-primary"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm font-medium ${task.status === 'concluida' ? 'line-through text-muted-foreground' : ''}`}>
+                          {task.title}
+                        </p>
+                        {task.due_date && (
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            Prazo: {new Date(task.due_date).toLocaleDateString('pt-PT')}
+                          </p>
+                        )}
+                      </div>
+                      <TaskPriorityBadge priority={task.priority} />
+                      <TaskStatusBadge status={task.status} />
+                      <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => { setEditingTask(task); setTaskOpen(true); }}>
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0 text-destructive" onClick={() => deleteTaskMutation.mutate(task.id)}>
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </TabsContent>
 
             {/* Attachments */}
