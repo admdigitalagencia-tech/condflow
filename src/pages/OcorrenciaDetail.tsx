@@ -26,6 +26,7 @@ export default function OcorrenciaDetail() {
   const createUpdate = useCreateTicketUpdate();
   const changeStatus = useChangeTicketStatus();
   const updateTicket = useUpdateTicket();
+  const { data: aiContext } = useCondominiumContext(ticket?.condominium_id || null);
 
   const [editOpen, setEditOpen] = useState(false);
   const [comment, setComment] = useState('');
