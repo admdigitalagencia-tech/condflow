@@ -248,10 +248,15 @@ export default function Documentos() {
               <label className="flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-8 cursor-pointer hover:border-accent transition-colors">
                 <Upload className="h-8 w-8 text-muted-foreground mb-2" />
                 <p className="text-sm text-muted-foreground">Clique ou arraste um ficheiro</p>
-                <input type="file" className="hidden" onChange={e => {
-                  const f = e.target.files?.[0];
-                  if (f) { setUploadFile(f); setUploadTitle(f.name.replace(/\.[^/.]+$/, '')); }
-                }} />
+                <input
+                  type="file"
+                  accept={FILE_INPUT_ACCEPT}
+                  className="hidden"
+                  onChange={e => {
+                    const f = e.target.files?.[0];
+                    if (f) handleSelectFile(f);
+                  }}
+                />
               </label>
             ) : (
               <div className="flex items-center gap-2 p-3 bg-muted rounded-md">
