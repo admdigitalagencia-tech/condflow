@@ -7,6 +7,8 @@ import { TicketPriorityBadge, TicketStatusBadge } from '@/components/tickets/Tic
 import { TicketFormDialog } from '@/components/tickets/TicketFormDialog';
 import { SLATracker } from '@/components/tickets/SLATracker';
 import { TicketAttachments } from '@/components/tickets/TicketAttachments';
+import { TaskFormDialog } from '@/components/tasks/TaskFormDialog';
+import { TaskStatusBadge, TaskPriorityBadge } from '@/components/tasks/TaskBadges';
 import { SummaryCard } from '@/components/shared/SummaryCard';
 import { AIAssistantPanel } from '@/components/ai/AIAssistantPanel';
 import { Button } from '@/components/ui/button';
@@ -14,9 +16,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { useTasks, useUpdateTask, useDeleteTask } from '@/hooks/useTasks';
+import { Task } from '@/services/tasks';
 import {
   ArrowLeft, Pencil, MessageSquare, Clock, ArrowRightLeft,
-  Brain, FileText, Euro, CheckSquare, Building2, Truck, MapPin, Calendar, ListChecks, Paperclip,
+  Brain, FileText, Euro, CheckSquare, Building2, Truck, MapPin, Calendar, ListChecks, Paperclip, Plus, Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -31,9 +35,16 @@ export default function OcorrenciaDetail() {
   const { data: aiContext } = useCondominiumContext(ticket?.condominium_id || null);
 
   const [editOpen, setEditOpen] = useState(false);
+  const [taskOpen, setTaskOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [comment, setComment] = useState('');
   const [newStatus, setNewStatus] = useState('');
   const [closureSummary, setClosureSummary] = useState('');
+  
+  const { data: allTasks } = useTasks();
+  const updateTaskMutation = useUpdateTask();
+  const deleteTaskMutation = useDeleteTask();
+  const ticketTasks = (allTasks || []).filter(t => t.ticket_id === id);
 
   if (isLoading) {
     return <div className="flex justify-center py-12"><div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div>;
@@ -243,12 +254,57 @@ export default function OcorrenciaDetail() {
               </SummaryCard>
             </TabsContent>
 
-            {/* Tasks placeholder */}
-            <TabsContent value="tasks" className="mt-4">
-              <div className="rounded-lg border border-dashed p-8 text-center">
-                <CheckSquare className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                <p className="text-sm text-muted-foreground">Gestão de tarefas — em breve</p>
+            <TabsContent value="tasks" className="mt-4 space-y-4">
+              <div className="flex justify-between items-center">
+                <p className="text-sm text-muted-foreground">{ticketTasks.length} tarefa(s) associada(s)</p>
+                <Button size="sm" className="gap-1.5" onClick={() => { setEditingTask(null); setTaskOpen(true); }}>
+                  <Plus className="h-3.5 w-3.5" /> Nova Tarefa
+                </Button>
               </div>
+              {ticketTasks.length === 0 ? (
+                <div className="rounded-lg border border-dashed p-8 text-center">
+                  <CheckSquare className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                  <p className="text-sm text-muted-foreground">Nenhuma tarefa associada a esta ocorrência</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {ticketTasks.map(task => (
+                    <div key={task.id} className="flex items-center gap-3 rounded-lg border p-3 hover:bg-muted/50 transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={task.status === 'concluida'}
+                        onChange={() => {
+                          const done = task.status !== 'concluida';
+                          updateTaskMutation.mutate({
+                            id: task.id,
+                            status: done ? 'concluida' : 'pendente',
+                            completed_at: done ? new Date().toISOString() : null,
+                          });
+                        }}
+                        className="h-4 w-4 rounded border-input accent-primary"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm font-medium ${task.status === 'concluida' ? 'line-through text-muted-foreground' : ''}`}>
+                          {task.title}
+                        </p>
+                        {task.due_date && (
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            Prazo: {new Date(task.due_date).toLocaleDateString('pt-PT')}
+                          </p>
+                        )}
+                      </div>
+                      <TaskPriorityBadge priority={task.priority} />
+                      <TaskStatusBadge status={task.status} />
+                      <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => { setEditingTask(task); setTaskOpen(true); }}>
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0 text-destructive" onClick={() => deleteTaskMutation.mutate(task.id)}>
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </TabsContent>
 
             {/* Attachments */}
@@ -347,6 +403,13 @@ export default function OcorrenciaDetail() {
       </div>
 
       <TicketFormDialog open={editOpen} onOpenChange={setEditOpen} ticket={ticket} />
+      <TaskFormDialog
+        open={taskOpen}
+        onOpenChange={setTaskOpen}
+        task={editingTask}
+        defaultTicketId={id}
+        defaultCondominiumId={ticket.condominium_id}
+      />
     </div>
   );
 }

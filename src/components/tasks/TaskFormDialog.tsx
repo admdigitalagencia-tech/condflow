@@ -14,9 +14,11 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   task?: Task | null;
+  defaultTicketId?: string;
+  defaultCondominiumId?: string;
 }
 
-export function TaskFormDialog({ open, onOpenChange, task }: Props) {
+export function TaskFormDialog({ open, onOpenChange, task, defaultTicketId, defaultCondominiumId }: Props) {
   const { data: condominiums } = useCondominiums();
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
@@ -42,9 +44,10 @@ export function TaskFormDialog({ open, onOpenChange, task }: Props) {
         status: task.status,
         due_date: task.due_date,
         task_type: task.task_type,
+        ticket_id: task.ticket_id || defaultTicketId || null,
       });
     } else {
-      setForm({ title: '', description: '', condominium_id: '', priority: 'media', status: 'pendente', due_date: null, task_type: 'manual' });
+      setForm({ title: '', description: '', condominium_id: defaultCondominiumId || '', priority: 'media', status: 'pendente', due_date: null, task_type: 'manual', ticket_id: defaultTicketId || null });
     }
   }, [task, open]);
 
