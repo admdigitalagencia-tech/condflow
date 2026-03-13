@@ -169,7 +169,7 @@ export default function Ocorrencias() {
                     <p className="text-xs text-muted-foreground">{t.condominiums?.name}</p>
                     {t.due_date && (
                       <p className={`text-xs mt-1 ${isOverdue(t) ? 'text-destructive' : 'text-muted-foreground'}`}>
-                        Prazo: {formatDate(t.due_date)}
+                        Visita: {formatDate(t.due_date)}
                       </p>
                     )}
                   </div>

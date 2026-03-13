@@ -27,8 +27,8 @@ export function TicketFormDialog({ open, onOpenChange, ticket, defaultCondominiu
 
   const [form, setForm] = useState({
     condominium_id: '', title: '', description: '', category: 'administrativo',
-    subcategory: '', location_text: '', source_channel: '', priority: 'media',
-    supplier_id: '', due_date: '', estimated_cost: '',
+    location_text: '', source_channel: '', priority: 'media',
+    supplier_id: '', due_date: '',
   });
 
   useEffect(() => {
@@ -38,20 +38,18 @@ export function TicketFormDialog({ open, onOpenChange, ticket, defaultCondominiu
         title: ticket.title,
         description: ticket.description || '',
         category: ticket.category,
-        subcategory: ticket.subcategory || '',
         location_text: ticket.location_text || '',
         source_channel: ticket.source_channel || '',
         priority: ticket.priority,
         supplier_id: ticket.supplier_id || '',
         due_date: ticket.due_date || '',
-        estimated_cost: ticket.estimated_cost?.toString() || '',
       });
     } else {
       setForm({
         condominium_id: defaultCondominiumId || '',
         title: '', description: '', category: 'administrativo',
-        subcategory: '', location_text: '', source_channel: '', priority: 'media',
-        supplier_id: '', due_date: '', estimated_cost: '',
+        location_text: '', source_channel: '', priority: 'media',
+        supplier_id: '', due_date: '',
       });
     }
   }, [ticket, open, defaultCondominiumId]);
@@ -63,13 +61,11 @@ export function TicketFormDialog({ open, onOpenChange, ticket, defaultCondominiu
       title: form.title,
       description: form.description || null,
       category: form.category as any,
-      subcategory: form.subcategory || null,
+      priority: form.priority as any,
       location_text: form.location_text || null,
       source_channel: form.source_channel || null,
-      priority: form.priority as any,
       supplier_id: form.supplier_id && form.supplier_id !== 'none' ? form.supplier_id : null,
       due_date: form.due_date || null,
-      estimated_cost: form.estimated_cost ? parseFloat(form.estimated_cost) : null,
     };
     try {
       if (isEdit) {
@@ -145,24 +141,20 @@ export function TicketFormDialog({ open, onOpenChange, ticket, defaultCondominiu
             </div>
           </div>
 
-          {/* Subcategoria + Local */}
+          {/* Local + Origem */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label htmlFor="subcategory">Subcategoria</Label>
-              <Input id="subcategory" value={form.subcategory} onChange={e => set('subcategory', e.target.value)} placeholder="Ex: Garagem, Fachada..." />
-            </div>
             <div className="space-y-2">
               <Label htmlFor="location_text">Local</Label>
               <Input id="location_text" value={form.location_text} onChange={e => set('location_text', e.target.value)} placeholder="Ex: Piso -1, Hall R/C..." />
             </div>
-          </div>
-
-          {/* Origem + Fornecedor */}
-          <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label htmlFor="source_channel">Origem</Label>
               <Input id="source_channel" value={form.source_channel} onChange={e => set('source_channel', e.target.value)} placeholder="Condómino, inspeção, admin..." />
             </div>
+          </div>
+
+          {/* Fornecedor + Visita Agendada */}
+          <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <Label>Fornecedor</Label>
               <Select value={form.supplier_id} onValueChange={v => set('supplier_id', v)}>
@@ -175,17 +167,9 @@ export function TicketFormDialog({ open, onOpenChange, ticket, defaultCondominiu
                 </SelectContent>
               </Select>
             </div>
-          </div>
-
-          {/* Prazo + Custo */}
-          <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label htmlFor="due_date">Prazo Previsto</Label>
+              <Label htmlFor="due_date">Visita Agendada</Label>
               <Input id="due_date" type="date" value={form.due_date} onChange={e => set('due_date', e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="estimated_cost">Custo Estimado (€)</Label>
-              <Input id="estimated_cost" type="number" step="0.01" value={form.estimated_cost} onChange={e => set('estimated_cost', e.target.value)} />
             </div>
           </div>
 
