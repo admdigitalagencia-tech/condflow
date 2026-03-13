@@ -57,6 +57,12 @@ export default function Documentos() {
     if (!uploadFile_ || !uploadTitle) return;
     setUploading(true);
     try {
+      const maxSize = 50 * 1024 * 1024; // 50MB
+      if (uploadFile_.size > maxSize) {
+        toast.error(`Ficheiro demasiado grande (${(uploadFile_.size / 1048576).toFixed(1)} MB). Máximo permitido: 50 MB.`);
+        setUploading(false);
+        return;
+      }
       const path = `${Date.now()}_${uploadFile_.name}`;
       const { path: storedPath } = await uploadFile(uploadFile_, path);
       await createDoc.mutateAsync({
@@ -67,11 +73,23 @@ export default function Documentos() {
         file_size: uploadFile_.size,
         condominium_id: uploadCondo || undefined,
       });
-      toast.success('Documento carregado');
+      toast.success('Documento carregado com sucesso');
       setUploadOpen(false);
       resetUploadForm();
-    } catch {
-      toast.error('Erro ao carregar documento');
+    } catch (err: any) {
+      const message = err?.message || err?.error_description || String(err);
+      if (message.includes('Payload too large') || message.includes('413')) {
+        toast.error('Ficheiro demasiado grande. Reduza o tamanho e tente novamente.');
+      } else if (message.includes('mime') || message.includes('type')) {
+        toast.error(`Tipo de ficheiro não suportado: ${uploadFile_.type || 'desconhecido'}`);
+      } else if (message.includes('duplicate') || message.includes('already exists')) {
+        toast.error('Já existe um ficheiro com este nome. Renomeie e tente novamente.');
+      } else if (message.includes('permission') || message.includes('policy') || message.includes('403')) {
+        toast.error('Sem permissão para carregar ficheiros. Verifique a sua sessão.');
+      } else {
+        toast.error(`Erro ao carregar documento: ${message}`);
+      }
+      console.error('Upload error:', err);
     } finally {
       setUploading(false);
     }
