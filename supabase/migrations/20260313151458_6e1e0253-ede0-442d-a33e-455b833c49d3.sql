@@ -1,0 +1,1 @@
+ALTER TABLE public.ai_runs ADD COLUMN IF NOT EXISTS condominium_id uuid REFERENCES public.condominiums(id) ON DELETE SET NULL;
