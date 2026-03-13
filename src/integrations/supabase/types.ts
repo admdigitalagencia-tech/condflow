@@ -1152,6 +1152,12 @@ export type Database = {
           organization_id: string | null
           priority: Database["public"]["Enums"]["ticket_priority"]
           severity_score: number | null
+          sla_completed_at: string | null
+          sla_in_construction_at: string | null
+          sla_quote_approved_at: string | null
+          sla_quote_received_at: string | null
+          sla_supplier_contacted_at: string | null
+          sla_visit_done_at: string | null
           source_channel: string | null
           status: Database["public"]["Enums"]["ticket_status"]
           subcategory: string | null
@@ -1179,6 +1185,12 @@ export type Database = {
           organization_id?: string | null
           priority?: Database["public"]["Enums"]["ticket_priority"]
           severity_score?: number | null
+          sla_completed_at?: string | null
+          sla_in_construction_at?: string | null
+          sla_quote_approved_at?: string | null
+          sla_quote_received_at?: string | null
+          sla_supplier_contacted_at?: string | null
+          sla_visit_done_at?: string | null
           source_channel?: string | null
           status?: Database["public"]["Enums"]["ticket_status"]
           subcategory?: string | null
@@ -1206,6 +1218,12 @@ export type Database = {
           organization_id?: string | null
           priority?: Database["public"]["Enums"]["ticket_priority"]
           severity_score?: number | null
+          sla_completed_at?: string | null
+          sla_in_construction_at?: string | null
+          sla_quote_approved_at?: string | null
+          sla_quote_received_at?: string | null
+          sla_supplier_contacted_at?: string | null
+          sla_visit_done_at?: string | null
           source_channel?: string | null
           status?: Database["public"]["Enums"]["ticket_status"]
           subcategory?: string | null
