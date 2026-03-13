@@ -32,6 +32,8 @@ export default function AssembleiaDetail() {
   const { id } = useParams<{ id: string }>();
   const nav = useNavigate();
   const { data: assembly, isLoading } = useAssembly(id!);
+  const assemblyCondoId = assembly?.condominium_id || null;
+  const { data: aiContext } = useCondominiumContext(assemblyCondoId);
   const updateAssembly = useUpdateAssembly();
   const { data: points } = useAssemblyPoints(id!);
   const createPoint = useCreateAssemblyPoint();
