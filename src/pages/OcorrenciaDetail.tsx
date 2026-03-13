@@ -309,6 +309,7 @@ export default function OcorrenciaDetail() {
 
           {/* AI Assistant */}
           <AIAssistantPanel
+            condominiumContext={aiContext || null}
             actions={[
               {
                 label: 'Gerar resumo da ocorrência',
