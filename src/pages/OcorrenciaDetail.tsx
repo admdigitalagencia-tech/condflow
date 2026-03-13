@@ -403,9 +403,15 @@ export default function OcorrenciaDetail() {
       </div>
 
       <TicketFormDialog open={editOpen} onOpenChange={setEditOpen} ticket={ticket} />
+      <TaskFormDialog
+        open={taskOpen}
+        onOpenChange={setTaskOpen}
+        task={editingTask}
+        defaultTicketId={id}
+        defaultCondominiumId={ticket.condominium_id}
+      />
     </div>
   );
-}
 
 function DetailRow({ label, value }: { label: string; value?: string | null }) {
   return (
