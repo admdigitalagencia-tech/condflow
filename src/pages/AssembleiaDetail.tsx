@@ -420,6 +420,7 @@ export default function AssembleiaDetail() {
           {/* AI Assistant */}
           <AIAssistantPanel
             title="Assistente IA"
+            condominiumContext={aiContext || null}
             actions={[
               {
                 label: 'Gerar resumo da assembleia',
