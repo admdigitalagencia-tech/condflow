@@ -35,9 +35,16 @@ export default function OcorrenciaDetail() {
   const { data: aiContext } = useCondominiumContext(ticket?.condominium_id || null);
 
   const [editOpen, setEditOpen] = useState(false);
+  const [taskOpen, setTaskOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [comment, setComment] = useState('');
   const [newStatus, setNewStatus] = useState('');
   const [closureSummary, setClosureSummary] = useState('');
+  
+  const { data: allTasks } = useTasks();
+  const updateTaskMutation = useUpdateTask();
+  const deleteTaskMutation = useDeleteTask();
+  const ticketTasks = (allTasks || []).filter(t => t.ticket_id === id);
 
   if (isLoading) {
     return <div className="flex justify-center py-12"><div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div>;
