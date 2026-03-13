@@ -7,6 +7,8 @@ import { TicketPriorityBadge, TicketStatusBadge } from '@/components/tickets/Tic
 import { TicketFormDialog } from '@/components/tickets/TicketFormDialog';
 import { SLATracker } from '@/components/tickets/SLATracker';
 import { TicketAttachments } from '@/components/tickets/TicketAttachments';
+import { TaskFormDialog } from '@/components/tasks/TaskFormDialog';
+import { TaskStatusBadge, TaskPriorityBadge } from '@/components/tasks/TaskBadges';
 import { SummaryCard } from '@/components/shared/SummaryCard';
 import { AIAssistantPanel } from '@/components/ai/AIAssistantPanel';
 import { Button } from '@/components/ui/button';
@@ -14,9 +16,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { useTasks, useUpdateTask, useDeleteTask } from '@/hooks/useTasks';
+import { Task } from '@/services/tasks';
 import {
   ArrowLeft, Pencil, MessageSquare, Clock, ArrowRightLeft,
-  Brain, FileText, Euro, CheckSquare, Building2, Truck, MapPin, Calendar, ListChecks, Paperclip,
+  Brain, FileText, Euro, CheckSquare, Building2, Truck, MapPin, Calendar, ListChecks, Paperclip, Plus, Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
