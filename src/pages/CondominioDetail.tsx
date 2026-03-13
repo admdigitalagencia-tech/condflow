@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useCondominiumContext } from '@/hooks/useCondominiumContext';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useCondominium, useUpdateCondominium } from '@/hooks/useCondominiums';
 import { useStakeholdersByCondominium, useLinkStakeholder, useUnlinkStakeholder } from '@/hooks/useStakeholders';
