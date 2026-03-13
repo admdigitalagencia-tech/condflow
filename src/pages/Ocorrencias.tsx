@@ -112,7 +112,7 @@ export default function Ocorrencias() {
                 <TableHead>Prioridade</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Fornecedor</TableHead>
-                <TableHead>Prazo</TableHead>
+                <TableHead>Visita</TableHead>
                 <TableHead className="w-10" />
               </TableRow>
             </TableHeader>
