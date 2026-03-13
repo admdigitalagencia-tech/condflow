@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useCondominiumContext } from '@/hooks/useCondominiumContext';
 import {
   useAssembly, useUpdateAssembly,
   useAssemblyPoints, useCreateAssemblyPoint, useUpdateAssemblyPoint, useDeleteAssemblyPoint,
