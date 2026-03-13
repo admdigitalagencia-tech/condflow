@@ -44,6 +44,7 @@ export function TaskFormDialog({ open, onOpenChange, task, defaultTicketId, defa
         status: task.status,
         due_date: task.due_date,
         task_type: task.task_type,
+        ticket_id: task.ticket_id || defaultTicketId || null,
       });
     } else {
       setForm({ title: '', description: '', condominium_id: defaultCondominiumId || '', priority: 'media', status: 'pendente', due_date: null, task_type: 'manual', ticket_id: defaultTicketId || null });
