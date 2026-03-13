@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react';
-import { FileText, Plus, Upload, Search, X, ExternalLink, Pencil, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import { FileText, Upload, Search, X, ExternalLink, Pencil, Trash2 } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Label } from '@/components/ui/label';
 import { useDocuments, useCreateDocument, useDeleteDocument, useUpdateDocument } from '@/hooks/useDocuments';
 import { useCondominiums } from '@/hooks/useCondominiums';
-import { DOCUMENT_TYPES, documentTypeLabel, uploadFile } from '@/services/documents';
+import { DOCUMENT_TYPES, documentTypeLabel, uploadFile, validateDocumentFile, sanitizeStorageFileName, ALLOWED_DOCUMENT_EXTENSIONS_LABEL } from '@/services/documents';
 import { toast } from 'sonner';
 
 export default function Documentos() {
@@ -34,6 +34,7 @@ export default function Documentos() {
   const [uploadType, setUploadType] = useState('fotografia');
   const [uploadCondo, setUploadCondo] = useState('');
   const [uploading, setUploading] = useState(false);
+  const FILE_INPUT_ACCEPT = '.pdf,.doc,.jpeg,.jpg,.png,.txt';
 
   const filtered = (documents || []).filter(d => {
     if (search && !d.title.toLowerCase().includes(search.toLowerCase())) return false;
@@ -42,28 +43,41 @@ export default function Documentos() {
     return true;
   });
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
+  const handleSelectFile = (file: File) => {
+    const validation = validateDocumentFile(file);
+    if (!validation.valid) {
+      toast.error(validation.reason || `Formato não suportado. Permitidos: ${ALLOWED_DOCUMENT_EXTENSIONS_LABEL}.`);
+      return false;
+    }
+
+    setUploadFile(file);
+    setUploadTitle(file.name.replace(/\.[^/.]+$/, ''));
+    return true;
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setDragging(false);
     const files = Array.from(e.dataTransfer.files);
-    if (files.length > 0) {
-      setUploadFile(files[0]);
-      setUploadTitle(files[0].name.replace(/\.[^/.]+$/, ''));
+    if (files.length > 0 && handleSelectFile(files[0])) {
       setUploadOpen(true);
     }
-  }, []);
+  };
 
   const handleUpload = async () => {
     if (!uploadFile_ || !uploadTitle) return;
     setUploading(true);
+
+    const validation = validateDocumentFile(uploadFile_);
+    if (!validation.valid) {
+      toast.error(validation.reason || `Formato não suportado. Permitidos: ${ALLOWED_DOCUMENT_EXTENSIONS_LABEL}.`);
+      setUploading(false);
+      return;
+    }
+
     try {
-      const maxSize = 50 * 1024 * 1024; // 50MB
-      if (uploadFile_.size > maxSize) {
-        toast.error(`Ficheiro demasiado grande (${(uploadFile_.size / 1048576).toFixed(1)} MB). Máximo permitido: 50 MB.`);
-        setUploading(false);
-        return;
-      }
-      const path = `${Date.now()}_${uploadFile_.name}`;
+      const safeFileName = sanitizeStorageFileName(uploadFile_.name);
+      const path = `${Date.now()}_${safeFileName}`;
       const { path: storedPath } = await uploadFile(uploadFile_, path);
       await createDoc.mutateAsync({
         title: uploadTitle,
@@ -78,10 +92,12 @@ export default function Documentos() {
       resetUploadForm();
     } catch (err: any) {
       const message = err?.message || err?.error_description || String(err);
-      if (message.includes('Payload too large') || message.includes('413')) {
+      if (message.includes('Invalid key')) {
+        toast.error('Nome do ficheiro inválido. Remova caracteres especiais e tente novamente.');
+      } else if (message.includes('Payload too large') || message.includes('413')) {
         toast.error('Ficheiro demasiado grande. Reduza o tamanho e tente novamente.');
       } else if (message.includes('mime') || message.includes('type')) {
-        toast.error(`Tipo de ficheiro não suportado: ${uploadFile_.type || 'desconhecido'}`);
+        toast.error(`Tipo de ficheiro não suportado. Permitidos: ${ALLOWED_DOCUMENT_EXTENSIONS_LABEL}.`);
       } else if (message.includes('duplicate') || message.includes('already exists')) {
         toast.error('Já existe um ficheiro com este nome. Renomeie e tente novamente.');
       } else if (message.includes('permission') || message.includes('policy') || message.includes('403')) {
@@ -232,10 +248,15 @@ export default function Documentos() {
               <label className="flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-8 cursor-pointer hover:border-accent transition-colors">
                 <Upload className="h-8 w-8 text-muted-foreground mb-2" />
                 <p className="text-sm text-muted-foreground">Clique ou arraste um ficheiro</p>
-                <input type="file" className="hidden" onChange={e => {
-                  const f = e.target.files?.[0];
-                  if (f) { setUploadFile(f); setUploadTitle(f.name.replace(/\.[^/.]+$/, '')); }
-                }} />
+                <input
+                  type="file"
+                  accept={FILE_INPUT_ACCEPT}
+                  className="hidden"
+                  onChange={e => {
+                    const f = e.target.files?.[0];
+                    if (f) handleSelectFile(f);
+                  }}
+                />
               </label>
             ) : (
               <div className="flex items-center gap-2 p-3 bg-muted rounded-md">
