@@ -5,6 +5,8 @@ import { useCondominiumContext } from '@/hooks/useCondominiumContext';
 import { TICKET_STATUSES, categoryLabel, statusLabel, priorityLabel, type TicketStatus } from '@/services/tickets';
 import { TicketPriorityBadge, TicketStatusBadge } from '@/components/tickets/TicketBadges';
 import { TicketFormDialog } from '@/components/tickets/TicketFormDialog';
+import { SLATracker } from '@/components/tickets/SLATracker';
+import { TicketAttachments } from '@/components/tickets/TicketAttachments';
 import { SummaryCard } from '@/components/shared/SummaryCard';
 import { AIAssistantPanel } from '@/components/ai/AIAssistantPanel';
 import { Button } from '@/components/ui/button';
@@ -14,7 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import {
   ArrowLeft, Pencil, MessageSquare, Clock, ArrowRightLeft,
-  Brain, FileText, Euro, CheckSquare, Building2, Truck, MapPin, Calendar, ListChecks,
+  Brain, FileText, Euro, CheckSquare, Building2, Truck, MapPin, Calendar, ListChecks, Paperclip,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -69,6 +71,14 @@ export default function OcorrenciaDetail() {
     } catch { toast.error('Erro ao alterar estado'); }
   };
 
+  const handleSLAToggle = async (field: string, currentValue: string | null) => {
+    try {
+      const value = currentValue ? null : new Date().toISOString();
+      await updateTicket.mutateAsync({ id: id!, values: { [field]: value } as any });
+      toast.success(currentValue ? 'Etapa SLA desmarcada' : 'Etapa SLA marcada');
+    } catch { toast.error('Erro ao atualizar SLA'); }
+  };
+
   const getUpdateIcon = (type: string) => {
     switch (type) {
       case 'status_change': return <ArrowRightLeft className="h-3.5 w-3.5" />;
@@ -121,7 +131,9 @@ export default function OcorrenciaDetail() {
               <TabsTrigger value="details">Detalhes</TabsTrigger>
               <TabsTrigger value="costs">Custos</TabsTrigger>
               <TabsTrigger value="tasks">Tarefas</TabsTrigger>
-              <TabsTrigger value="attachments">Anexos</TabsTrigger>
+              <TabsTrigger value="attachments" className="gap-1.5">
+                <Paperclip className="h-3.5 w-3.5" /> Anexos
+              </TabsTrigger>
             </TabsList>
 
             {/* Timeline */}
@@ -134,7 +146,6 @@ export default function OcorrenciaDetail() {
 
               {/* Timeline entries */}
               <div className="space-y-0">
-                {/* Opening entry */}
                 <div className="flex gap-3 pb-4">
                   <div className="flex flex-col items-center">
                     <div className="h-7 w-7 rounded-full bg-accent flex items-center justify-center shrink-0">
@@ -194,17 +205,16 @@ export default function OcorrenciaDetail() {
                 <SummaryCard title="Informações da Ocorrência">
                   <div className="space-y-2 text-sm">
                     <DetailRow label="Categoria" value={categoryLabel(ticket.category)} />
-                    <DetailRow label="Subcategoria" value={ticket.subcategory} />
                     <DetailRow label="Local" value={ticket.location_text} />
                     <DetailRow label="Origem" value={ticket.source_channel} />
                     <DetailRow label="Prioridade" value={priorityLabel(ticket.priority)} />
                     <DetailRow label="Fornecedor" value={ticket.suppliers?.name} />
                   </div>
                 </SummaryCard>
-                <SummaryCard title="Datas e Prazos">
+                <SummaryCard title="Datas">
                   <div className="space-y-2 text-sm">
                     <DetailRow label="Abertura" value={formatDateTime(ticket.opened_at)} />
-                    <DetailRow label="Prazo Previsto" value={formatDate(ticket.due_date)} />
+                    <DetailRow label="Visita Agendada" value={formatDate(ticket.due_date)} />
                     <DetailRow label="Última Atividade" value={formatDateTime(ticket.last_activity_at)} />
                     <DetailRow label="Encerramento" value={ticket.closed_at ? formatDateTime(ticket.closed_at) : null} />
                   </div>
@@ -241,18 +251,20 @@ export default function OcorrenciaDetail() {
               </div>
             </TabsContent>
 
-            {/* Attachments placeholder */}
+            {/* Attachments */}
             <TabsContent value="attachments" className="mt-4">
-              <div className="rounded-lg border border-dashed p-8 text-center">
-                <FileText className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                <p className="text-sm text-muted-foreground">Anexos — em breve</p>
-              </div>
+              <TicketAttachments ticketId={id!} condominiumId={ticket.condominium_id} />
             </TabsContent>
           </Tabs>
         </div>
 
         {/* Right sidebar */}
         <div className="space-y-4">
+          {/* SLA Tracker */}
+          <SummaryCard title="SLA de Atendimento">
+            <SLATracker ticket={ticket} onToggle={handleSLAToggle} />
+          </SummaryCard>
+
           {/* Quick info */}
           <SummaryCard title="Resumo">
             <div className="space-y-3 text-sm">
@@ -279,7 +291,7 @@ export default function OcorrenciaDetail() {
               )}
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
-                <span className="text-muted-foreground">Prazo:</span>
+                <span className="text-muted-foreground">Visita:</span>
                 <span className={`font-medium ${isOverdue ? 'text-destructive' : ''}`}>{formatDate(ticket.due_date)}</span>
               </div>
             </div>
@@ -315,7 +327,7 @@ export default function OcorrenciaDetail() {
                 label: 'Gerar resumo da ocorrência',
                 feature: 'ticket_summary',
                 icon: FileText,
-                buildPrompt: () => `Analisa esta ocorrência:\n\nTítulo: ${ticket.title}\nCódigo: ${ticket.code}\nCategoria: ${categoryLabel(ticket.category)}\nPrioridade: ${priorityLabel(ticket.priority)}\nEstado: ${statusLabel(ticket.status)}\nCondomínio: ${ticket.condominiums?.name || 'N/A'}\nDescrição: ${ticket.description || 'Sem descrição'}\nAberta em: ${formatDateTime(ticket.opened_at)}\nPrazo: ${formatDate(ticket.due_date)}\n\nHistórico de atualizações:\n${(updates || []).map(u => `- [${u.update_type}] ${u.body || ''} (${formatDateTime(u.created_at)})`).join('\n') || 'Sem atualizações'}`,
+                buildPrompt: () => `Analisa esta ocorrência:\n\nTítulo: ${ticket.title}\nCódigo: ${ticket.code}\nCategoria: ${categoryLabel(ticket.category)}\nPrioridade: ${priorityLabel(ticket.priority)}\nEstado: ${statusLabel(ticket.status)}\nCondomínio: ${ticket.condominiums?.name || 'N/A'}\nDescrição: ${ticket.description || 'Sem descrição'}\nAberta em: ${formatDateTime(ticket.opened_at)}\nVisita Agendada: ${formatDate(ticket.due_date)}\n\nHistórico de atualizações:\n${(updates || []).map(u => `- [${u.update_type}] ${u.body || ''} (${formatDateTime(u.created_at)})`).join('\n') || 'Sem atualizações'}`,
               },
               {
                 label: 'Sugerir próximos passos',

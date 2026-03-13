@@ -112,7 +112,7 @@ export default function Ocorrencias() {
                 <TableHead>Prioridade</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Fornecedor</TableHead>
-                <TableHead>Prazo</TableHead>
+                <TableHead>Visita</TableHead>
                 <TableHead className="w-10" />
               </TableRow>
             </TableHeader>
@@ -169,7 +169,7 @@ export default function Ocorrencias() {
                     <p className="text-xs text-muted-foreground">{t.condominiums?.name}</p>
                     {t.due_date && (
                       <p className={`text-xs mt-1 ${isOverdue(t) ? 'text-destructive' : 'text-muted-foreground'}`}>
-                        Prazo: {formatDate(t.due_date)}
+                        Visita: {formatDate(t.due_date)}
                       </p>
                     )}
                   </div>
