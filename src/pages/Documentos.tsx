@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { FileText, Plus, Upload, Search, X, ExternalLink, Pencil, Trash2 } from 'lucide-react';
+import { FileText, Upload, Search, X, ExternalLink, Pencil, Trash2 } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Label } from '@/components/ui/label';
 import { useDocuments, useCreateDocument, useDeleteDocument, useUpdateDocument } from '@/hooks/useDocuments';
 import { useCondominiums } from '@/hooks/useCondominiums';
-import { DOCUMENT_TYPES, documentTypeLabel, uploadFile } from '@/services/documents';
+import { DOCUMENT_TYPES, documentTypeLabel, uploadFile, validateDocumentFile, sanitizeStorageFileName, ALLOWED_DOCUMENT_EXTENSIONS_LABEL } from '@/services/documents';
 import { toast } from 'sonner';
 
 export default function Documentos() {

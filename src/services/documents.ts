@@ -15,7 +15,66 @@ export const DOCUMENT_TYPES = [
   { value: 'apolice', label: 'Apólice' },
 ] as const;
 
+export const ALLOWED_DOCUMENT_EXTENSIONS = ['pdf', 'doc', 'jpeg', 'jpg', 'png', 'txt'] as const;
+export const ALLOWED_DOCUMENT_EXTENSIONS_LABEL = 'PDF, DOC, JPEG, JPG, PNG e TXT';
+
+const ALLOWED_DOCUMENT_MIME_TYPES = new Set([
+  'application/pdf',
+  'application/msword',
+  'image/jpeg',
+  'image/png',
+  'text/plain',
+]);
+
 export const documentTypeLabel = (v: string) => DOCUMENT_TYPES.find(d => d.value === v)?.label || v;
+
+const getFileExtension = (fileName: string) => fileName.split('.').pop()?.toLowerCase() || '';
+
+export function sanitizeStorageFileName(fileName: string) {
+  const normalized = fileName
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+
+  const extension = getFileExtension(normalized);
+  const baseName = extension ? normalized.slice(0, -(extension.length + 1)) : normalized;
+
+  const safeBase = baseName
+    .replace(/[^a-zA-Z0-9-_]+/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 80);
+
+  const fallbackName = safeBase || 'documento';
+  const safeExtension = ALLOWED_DOCUMENT_EXTENSIONS.includes(extension as (typeof ALLOWED_DOCUMENT_EXTENSIONS)[number])
+    ? extension
+    : extension.replace(/[^a-z0-9]/g, '').slice(0, 8);
+
+  return safeExtension ? `${fallbackName}.${safeExtension}` : fallbackName;
+}
+
+export function validateDocumentFile(file: File, maxSizeMb = 50) {
+  const maxSize = maxSizeMb * 1024 * 1024;
+
+  if (file.size > maxSize) {
+    return {
+      valid: false,
+      reason: `Ficheiro demasiado grande (${(file.size / 1048576).toFixed(1)} MB). Máximo permitido: ${maxSizeMb} MB.`,
+    };
+  }
+
+  const extension = getFileExtension(file.name);
+  const validByExtension = ALLOWED_DOCUMENT_EXTENSIONS.includes(extension as (typeof ALLOWED_DOCUMENT_EXTENSIONS)[number]);
+  const validByMime = ALLOWED_DOCUMENT_MIME_TYPES.has(file.type);
+
+  if (!validByExtension && !validByMime) {
+    return {
+      valid: false,
+      reason: `Formato não suportado. Permitidos: ${ALLOWED_DOCUMENT_EXTENSIONS_LABEL}.`,
+    };
+  }
+
+  return { valid: true };
+}
 
 export async function fetchDocuments() {
   const { data, error } = await supabase
@@ -84,10 +143,31 @@ export async function deleteDocument(id: string) {
 }
 
 export async function uploadFile(file: File, path: string) {
+  const pathSegments = path.split('/').filter(Boolean);
+  const safePath = pathSegments
+    .map((segment, index) => {
+      const isFileName = index === pathSegments.length - 1;
+      if (isFileName) return sanitizeStorageFileName(segment);
+
+      return segment
+        .replace(/[^a-zA-Z0-9-_]+/g, '_')
+        .replace(/_+/g, '_')
+        .replace(/^_+|_+$/g, '');
+    })
+    .filter(Boolean)
+    .join('/');
+
+  if (!safePath) {
+    throw new Error('Nome de ficheiro inválido.');
+  }
+
   const { data, error } = await supabase.storage
     .from('documents')
-    .upload(path, file, { upsert: true });
+    .upload(safePath, file, { upsert: true });
+
   if (error) throw error;
+
   const { data: urlData } = supabase.storage.from('documents').getPublicUrl(data.path);
   return { path: data.path, url: urlData.publicUrl };
 }
+
