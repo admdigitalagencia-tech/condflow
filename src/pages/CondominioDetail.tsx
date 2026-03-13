@@ -55,6 +55,8 @@ export default function CondominioDetail() {
   const linkSupplier = useLinkSupplier();
   const unlinkSupplier = useUnlinkSupplier();
 
+  const { data: aiContext } = useCondominiumContext(id!);
+
   const [editOpen, setEditOpen] = useState(false);
   const [newNote, setNewNote] = useState('');
   const [selectedStakeholder, setSelectedStakeholder] = useState('');
