@@ -328,6 +328,32 @@ export default function CondominioDetail() {
         </TabsContent>
       </Tabs>
 
+      {/* AI Assistant Panel */}
+      <AIAssistantPanel
+        title="Assistente IA — Condomínio"
+        condominiumContext={aiContext || null}
+        actions={[
+          {
+            label: 'Resumir este condomínio',
+            feature: 'condominium_summary',
+            icon: Brain,
+            buildPrompt: () => `Gera um resumo operacional completo do condomínio ${condo.name}`,
+          },
+          {
+            label: 'Mostrar principais pendências',
+            feature: 'next_steps',
+            icon: ListChecks,
+            buildPrompt: () => `Quais são as principais pendências e prioridades operacionais do condomínio ${condo.name}?`,
+          },
+          {
+            label: 'Gerar atualização para administradores',
+            feature: 'formal_response',
+            icon: MessageSquare,
+            buildPrompt: () => `Gera uma comunicação formal com atualização do estado atual do condomínio ${condo.name} para enviar aos administradores`,
+          },
+        ]}
+      />
+
       <CondominiumFormDialog open={editOpen} onOpenChange={setEditOpen} condominium={condo} />
     </div>
   );
