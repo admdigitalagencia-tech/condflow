@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useCondominiumContext } from '@/hooks/useCondominiumContext';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useCondominium, useUpdateCondominium } from '@/hooks/useCondominiums';
 import { useStakeholdersByCondominium, useLinkStakeholder, useUnlinkStakeholder } from '@/hooks/useStakeholders';
@@ -26,9 +27,11 @@ import { ActivityTimeline } from '@/components/timeline/ActivityTimeline';
 import { CondominiumFormDialog } from '@/components/condominiums/CondominiumFormDialog';
 import { TicketPriorityBadge, TicketStatusBadge } from '@/components/tickets/TicketBadges';
 import { categoryLabel } from '@/services/tickets';
+import { AIAssistantPanel } from '@/components/ai/AIAssistantPanel';
 import {
   ArrowLeft, Building2, Pencil, Users, Truck, History, StickyNote,
   Plus, X, Mail, Phone, AlertTriangle, Calendar, FileText,
+  Brain, ListChecks, MessageSquare,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -51,6 +54,8 @@ export default function CondominioDetail() {
   const unlinkStakeholder = useUnlinkStakeholder();
   const linkSupplier = useLinkSupplier();
   const unlinkSupplier = useUnlinkSupplier();
+
+  const { data: aiContext } = useCondominiumContext(id!);
 
   const [editOpen, setEditOpen] = useState(false);
   const [newNote, setNewNote] = useState('');
@@ -322,6 +327,32 @@ export default function CondominioDetail() {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* AI Assistant Panel */}
+      <AIAssistantPanel
+        title="Assistente IA — Condomínio"
+        condominiumContext={aiContext || null}
+        actions={[
+          {
+            label: 'Resumir este condomínio',
+            feature: 'condominium_summary',
+            icon: Brain,
+            buildPrompt: () => `Gera um resumo operacional completo do condomínio ${condo.name}`,
+          },
+          {
+            label: 'Mostrar principais pendências',
+            feature: 'next_steps',
+            icon: ListChecks,
+            buildPrompt: () => `Quais são as principais pendências e prioridades operacionais do condomínio ${condo.name}?`,
+          },
+          {
+            label: 'Gerar atualização para administradores',
+            feature: 'formal_response',
+            icon: MessageSquare,
+            buildPrompt: () => `Gera uma comunicação formal com atualização do estado atual do condomínio ${condo.name} para enviar aos administradores`,
+          },
+        ]}
+      />
 
       <CondominiumFormDialog open={editOpen} onOpenChange={setEditOpen} condominium={condo} />
     </div>

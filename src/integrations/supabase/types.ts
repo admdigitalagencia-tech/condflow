@@ -70,6 +70,7 @@ export type Database = {
       }
       ai_runs: {
         Row: {
+          condominium_id: string | null
           confidence_score: number | null
           created_at: string
           created_by: string | null
@@ -83,6 +84,7 @@ export type Database = {
           status: string
         }
         Insert: {
+          condominium_id?: string | null
           confidence_score?: number | null
           created_at?: string
           created_by?: string | null
@@ -96,6 +98,7 @@ export type Database = {
           status?: string
         }
         Update: {
+          condominium_id?: string | null
           confidence_score?: number | null
           created_at?: string
           created_by?: string | null
@@ -109,6 +112,13 @@ export type Database = {
           status?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "ai_runs_condominium_id_fkey"
+            columns: ["condominium_id"]
+            isOneToOne: false
+            referencedRelation: "condominiums"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "ai_runs_organization_id_fkey"
             columns: ["organization_id"]

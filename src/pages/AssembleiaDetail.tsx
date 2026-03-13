@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useCondominiumContext } from '@/hooks/useCondominiumContext';
 import {
   useAssembly, useUpdateAssembly,
   useAssemblyPoints, useCreateAssemblyPoint, useUpdateAssemblyPoint, useDeleteAssemblyPoint,
@@ -31,6 +32,8 @@ export default function AssembleiaDetail() {
   const { id } = useParams<{ id: string }>();
   const nav = useNavigate();
   const { data: assembly, isLoading } = useAssembly(id!);
+  const assemblyCondoId = assembly?.condominium_id || null;
+  const { data: aiContext } = useCondominiumContext(assemblyCondoId);
   const updateAssembly = useUpdateAssembly();
   const { data: points } = useAssemblyPoints(id!);
   const createPoint = useCreateAssemblyPoint();
@@ -417,6 +420,7 @@ export default function AssembleiaDetail() {
           {/* AI Assistant */}
           <AIAssistantPanel
             title="Assistente IA"
+            condominiumContext={aiContext || null}
             actions={[
               {
                 label: 'Gerar resumo da assembleia',

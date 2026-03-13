@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTicket, useTicketUpdates, useCreateTicketUpdate, useChangeTicketStatus, useUpdateTicket } from '@/hooks/useTickets';
+import { useCondominiumContext } from '@/hooks/useCondominiumContext';
 import { TICKET_STATUSES, categoryLabel, statusLabel, priorityLabel, type TicketStatus } from '@/services/tickets';
 import { TicketPriorityBadge, TicketStatusBadge } from '@/components/tickets/TicketBadges';
 import { TicketFormDialog } from '@/components/tickets/TicketFormDialog';
@@ -25,6 +26,7 @@ export default function OcorrenciaDetail() {
   const createUpdate = useCreateTicketUpdate();
   const changeStatus = useChangeTicketStatus();
   const updateTicket = useUpdateTicket();
+  const { data: aiContext } = useCondominiumContext(ticket?.condominium_id || null);
 
   const [editOpen, setEditOpen] = useState(false);
   const [comment, setComment] = useState('');
@@ -307,6 +309,7 @@ export default function OcorrenciaDetail() {
 
           {/* AI Assistant */}
           <AIAssistantPanel
+            condominiumContext={aiContext || null}
             actions={[
               {
                 label: 'Gerar resumo da ocorrência',

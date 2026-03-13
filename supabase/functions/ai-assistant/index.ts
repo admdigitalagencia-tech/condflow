@@ -9,38 +9,66 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, feature } = await req.json();
+    const { messages, feature, condominiumContext } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const systemPrompts: Record<string, string> = {
+    const basePrompts: Record<string, string> = {
+      condominium_summary: `Você é um assistente de gestão de condomínios em Portugal (CondoFlow). Analise os dados do condomínio fornecido e gere um resumo operacional completo:
+1. **Visão Geral**: síntese da situação atual do prédio
+2. **Problemas Prioritários**: ocorrências abertas mais urgentes
+3. **Decisões Recentes**: últimas deliberações de assembleias
+4. **Tarefas Pendentes**: ações que precisam de atenção
+5. **Recomendações**: sugestões operacionais para o gestor
+
+Responda APENAS com base nos dados fornecidos. Não invente informações. Use português de Portugal formal e profissional.`,
+
       ticket_summary: `Você é um assistente de gestão de condomínios em Portugal. Analise a ocorrência fornecida e gere:
 1. **Resumo do Problema**: descrição concisa do problema
 2. **Situação Atual**: estado atual baseado no histórico
 3. **Próximos Passos Sugeridos**: 2-3 ações concretas recomendadas
 
-Use linguagem profissional em português de Portugal. Seja objetivo e prático.`,
+Responda APENAS com base nos dados fornecidos. Use linguagem profissional em português de Portugal. Seja objetivo e prático.`,
 
       formal_response: `Você é um assistente de gestão de condomínios em Portugal. Gere uma resposta formal e profissional para comunicação com condóminos. A resposta deve:
 - Ser redigida em português de Portugal formal
 - Incluir saudação e despedida adequadas
 - Ser empática mas objetiva
 - Incluir informação sobre o estado atual e próximos passos
-- Ter tom institucional e profissional`,
+- Ter tom institucional e profissional
+- Basear-se APENAS nos dados fornecidos`,
 
       assembly_summary: `Você é um assistente de gestão de condomínios em Portugal. Analise as informações da assembleia e gere:
 1. **Resumo da Reunião**: síntese dos temas abordados
 2. **Decisões Principais**: deliberações tomadas
-3. **Lista de Tarefas**: ações a executar após a assembleia, com responsáveis sugeridos
+3. **Pontos Pendentes**: assuntos por resolver
+4. **Lista de Tarefas**: ações a executar após a assembleia, com responsáveis sugeridos
 
-Use linguagem formal em português de Portugal.`,
+Responda APENAS com base nos dados fornecidos. Use linguagem formal em português de Portugal.`,
 
-      next_steps: `Você é um assistente de gestão de condomínios em Portugal. Com base no contexto fornecido, sugira os próximos passos operacionais que o gestor deve tomar. Seja concreto, prático e priorize por urgência. Use português de Portugal.`,
+      assembly_tasks: `Você é um assistente de gestão de condomínios em Portugal. Com base na assembleia e seus pontos, gere:
+1. **Lista de Deliberações**: decisões formais tomadas
+2. **Tarefas Operacionais**: ações concretas a executar, cada uma com:
+   - Descrição clara
+   - Prioridade sugerida (baixa/média/alta/urgente)
+   - Prazo sugerido
+3. **Follow-ups**: acompanhamentos necessários
 
-      general: `Você é um assistente inteligente para gestão de condomínios em Portugal (CondoFlow). Ajude o gestor com análises, resumos, sugestões e redação de textos administrativos. Use português de Portugal formal e profissional.`,
+Responda APENAS com base nos dados fornecidos. Use português de Portugal.`,
+
+      next_steps: `Você é um assistente de gestão de condomínios em Portugal. Com base no contexto fornecido, sugira os próximos passos operacionais que o gestor deve tomar. Seja concreto, prático e priorize por urgência. Responda APENAS com base nos dados fornecidos. Use português de Portugal.`,
+
+      history_query: `Você é um assistente de gestão de condomínios em Portugal (CondoFlow). O utilizador vai fazer perguntas sobre o histórico de um condomínio específico. Responda APENAS com base nos dados fornecidos. Se não houver informação suficiente nos dados, diga explicitamente que não encontrou dados sobre o tema. Nunca invente informações. Use português de Portugal formal.`,
+
+      general: `Você é um assistente inteligente para gestão de condomínios em Portugal (CondoFlow). Ajude o gestor com análises, resumos, sugestões e redação de textos administrativos. Responda APENAS com base nos dados do condomínio fornecidos — nunca invente informações. Use português de Portugal formal e profissional.`,
     };
 
-    const systemPrompt = systemPrompts[feature] || systemPrompts.general;
+    let systemPrompt = basePrompts[feature] || basePrompts.general;
+
+    // Append condominium context if provided
+    if (condominiumContext) {
+      systemPrompt += `\n\n---\n\nDados do condomínio para análise:\n\n${condominiumContext}`;
+    }
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

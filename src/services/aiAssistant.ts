@@ -5,12 +5,14 @@ type Msg = { role: 'user' | 'assistant'; content: string };
 export async function streamAI({
   messages,
   feature,
+  condominiumContext,
   onDelta,
   onDone,
   onError,
 }: {
   messages: Msg[];
   feature: string;
+  condominiumContext?: string;
   onDelta: (text: string) => void;
   onDone: () => void;
   onError?: (error: string) => void;
@@ -21,7 +23,7 @@ export async function streamAI({
       'Content-Type': 'application/json',
       Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
     },
-    body: JSON.stringify({ messages, feature }),
+    body: JSON.stringify({ messages, feature, condominiumContext }),
   });
 
   if (!resp.ok) {
