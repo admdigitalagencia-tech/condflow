@@ -14,9 +14,11 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   task?: Task | null;
+  defaultTicketId?: string;
+  defaultCondominiumId?: string;
 }
 
-export function TaskFormDialog({ open, onOpenChange, task }: Props) {
+export function TaskFormDialog({ open, onOpenChange, task, defaultTicketId, defaultCondominiumId }: Props) {
   const { data: condominiums } = useCondominiums();
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
