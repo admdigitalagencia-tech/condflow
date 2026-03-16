@@ -1,6 +1,6 @@
 import {
   Building2, LayoutDashboard, AlertTriangle, Users, FileText,
-  Calendar, Truck, CalendarDays, BarChart3, Brain, Settings, ListChecks,
+  Calendar, Truck, CalendarDays, BarChart3, Brain, Settings, ListChecks, ScrollText,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
