@@ -1,5 +1,15 @@
 import { supabase } from '@/integrations/supabase/client';
 
+// Extract text from uploaded document using AI
+export async function extractDocumentText(documentId: string, action?: 'parse_attendance') {
+  const { data, error } = await supabase.functions.invoke('extract-document', {
+    body: { document_id: documentId, action },
+  });
+  if (error) throw error;
+  if (data?.error) throw new Error(data.error);
+  return data as { success: boolean; extracted_text: string; attendees_count: number; attendees: any[] };
+}
+
 export const DOCUMENT_TYPES = [
   { value: 'ata', label: 'Ata' },
   { value: 'convocatoria', label: 'Convocatória' },
