@@ -161,44 +161,19 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Agenda + Tasks detail row */}
+      {/* Agenda Calendar + Tasks detail row */}
       <div className="grid lg:grid-cols-2 gap-6">
-        <SummaryCard title="Agenda — Próximos Eventos" action={
+        <SummaryCard title="Agenda" action={
           <Button variant="ghost" size="sm" className="text-xs gap-1 text-muted-foreground hover:text-foreground" onClick={() => nav('/agenda')}>Ver agenda <ArrowRight className="h-3 w-3" /></Button>
         }>
-          {upcomingAssemblies.length > 0 ? (
-            <div className="space-y-1">
-              {upcomingAssemblies.map(a => (
-                <div key={a.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/40 cursor-pointer transition-colors" onClick={() => nav(`/assembleias/${a.id}`)}>
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <div className="flex h-10 w-10 flex-col items-center justify-center rounded-lg bg-primary/8 shrink-0">
-                      <span className="text-[10px] font-medium text-primary uppercase leading-none">
-                        {format(parseISO(a.scheduled_date), 'MMM', { locale: pt })}
-                      </span>
-                      <span className="text-sm font-bold text-primary leading-tight">
-                        {format(parseISO(a.scheduled_date), 'd')}
-                      </span>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium truncate">{a.title}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {(a as any).condominiums?.name}
-                        {a.scheduled_time ? ` · ${a.scheduled_time.slice(0, 5)}` : ''}
-                      </p>
-                    </div>
-                  </div>
-                  <Badge variant="secondary" className="shrink-0 text-[10px]">
-                    {assemblyStatusLabel(a.status)}
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center gap-2 py-6 text-muted-foreground">
-              <CalendarDays className="h-5 w-5 opacity-40" />
-              <p className="text-sm">Nenhum evento agendado</p>
-            </div>
-          )}
+          <DashboardCalendar
+            items={agendaItems}
+            currentMonth={calMonth}
+            onMonthChange={setCalMonth}
+            selectedDate={selectedDate}
+            onSelectDate={setSelectedDate}
+            onNavigate={nav}
+          />
         </SummaryCard>
 
         <SummaryCard title="Tarefas — Próximas Ações" action={
