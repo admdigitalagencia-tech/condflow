@@ -6,7 +6,7 @@ import {
   useAssemblyPoints, useCreateAssemblyPoint, useUpdateAssemblyPoint, useDeleteAssemblyPoint,
   useAssemblyAttendees, useCreateAssemblyAttendee, useDeleteAssemblyAttendee,
   useTranscripts, useCreateTranscript,
-  useMinutes, useCreateMinute,
+  useMinutes, useCreateMinute, useGenerateMinutesAI,
 } from '@/hooks/useAssemblies';
 import { useDocumentsByAssembly, useCreateDocument } from '@/hooks/useDocuments';
 import { uploadFile } from '@/services/documents';
