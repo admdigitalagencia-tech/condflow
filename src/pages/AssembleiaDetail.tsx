@@ -298,6 +298,27 @@ export default function AssembleiaDetail() {
 
             {/* Presença */}
             <TabsContent value="presenca" className="mt-4 space-y-4">
+              {/* Upload attendance list */}
+              <div className="rounded-lg border-2 border-dashed border-accent/30 bg-accent/5 p-4">
+                <div className="flex items-center gap-3">
+                  <Upload className="h-5 w-5 text-accent shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Carregar lista de presença</p>
+                    <p className="text-xs text-muted-foreground">Faça upload de um PDF ou foto da folha de presenças. A IA extrai e cria os participantes automaticamente.</p>
+                  </div>
+                  <label>
+                    <Button size="sm" variant="outline" className="gap-1.5" asChild disabled={uploadingAttendance}>
+                      <span>
+                        {uploadingAttendance ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                        {uploadingAttendance ? 'A processar...' : 'Upload'}
+                      </span>
+                    </Button>
+                    <input type="file" accept="image/*,.pdf" className="hidden" onChange={handleAttendanceUpload} disabled={uploadingAttendance} />
+                  </label>
+                </div>
+              </div>
+
+              {/* Manual add */}
               <div className="flex gap-2 flex-wrap">
                 <Input placeholder="Nome" value={newAttendeeName} onChange={e => setNewAttendeeName(e.target.value)} className="flex-1 min-w-[150px] h-9" />
                 <Input placeholder="Fração" value={newAttendeeUnit} onChange={e => setNewAttendeeUnit(e.target.value)} className="w-[100px] h-9" />
