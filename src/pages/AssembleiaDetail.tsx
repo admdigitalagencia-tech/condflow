@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useCondominiumContext } from '@/hooks/useCondominiumContext';
 import {
@@ -9,7 +10,7 @@ import {
   useMinutes, useCreateMinute, useGenerateMinutesAI,
 } from '@/hooks/useAssemblies';
 import { useDocumentsByAssembly, useCreateDocument } from '@/hooks/useDocuments';
-import { uploadFile } from '@/services/documents';
+import { uploadFile, extractDocumentText } from '@/services/documents';
 import { assemblyStatusLabel, assemblyTypeLabel, minutesStatusLabel, ASSEMBLY_STATUSES } from '@/services/assemblies';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -31,6 +32,7 @@ import { toast } from 'sonner';
 export default function AssembleiaDetail() {
   const { id } = useParams<{ id: string }>();
   const nav = useNavigate();
+  const queryClient = useQueryClient();
   const { data: assembly, isLoading } = useAssembly(id!);
   const assemblyCondoId = assembly?.condominium_id || null;
   const { data: aiContext } = useCondominiumContext(assemblyCondoId);
@@ -58,6 +60,8 @@ export default function AssembleiaDetail() {
   const [editingPoint, setEditingPoint] = useState<string | null>(null);
   const [editPointData, setEditPointData] = useState<Record<string, string>>({});
   const [newStatus, setNewStatus] = useState('');
+  const [uploadingAttendance, setUploadingAttendance] = useState(false);
+  const [extractingDoc, setExtractingDoc] = useState<string | null>(null);
 
   if (isLoading) return <div className="flex justify-center py-12"><div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div>;
   if (!assembly) return <div className="p-6">Assembleia não encontrada.</div>;
@@ -102,7 +106,7 @@ export default function AssembleiaDetail() {
     try {
       const path = `assemblies/${id}/${Date.now()}_${file.name}`;
       const { path: storedPath } = await uploadFile(file, path);
-      await createDoc.mutateAsync({
+      const doc = await createDoc.mutateAsync({
         title: file.name.replace(/\.[^/.]+$/, ''),
         document_type: 'fotografia',
         file_path: storedPath,
@@ -112,7 +116,50 @@ export default function AssembleiaDetail() {
         condominium_id: assembly.condominium_id,
       });
       toast.success('Documento anexado');
+      // Auto-extract text in background
+      if (doc?.id) {
+        setExtractingDoc(doc.id);
+        extractDocumentText(doc.id)
+          .then(() => toast.success('Texto extraído automaticamente'))
+          .catch(() => {})
+          .finally(() => setExtractingDoc(null));
+      }
     } catch { toast.error('Erro ao anexar'); }
+    e.target.value = '';
+  };
+
+  const handleAttendanceUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingAttendance(true);
+    try {
+      const path = `assemblies/${id}/${Date.now()}_${file.name}`;
+      const { path: storedPath } = await uploadFile(file, path);
+      const doc = await createDoc.mutateAsync({
+        title: file.name.replace(/\.[^/.]+$/, ''),
+        document_type: 'lista_presenca',
+        file_path: storedPath,
+        mime_type: file.type,
+        file_size: file.size,
+        assembly_id: id!,
+        condominium_id: assembly.condominium_id,
+      });
+      toast.info('A extrair lista de presença...');
+      if (doc?.id) {
+        const result = await extractDocumentText(doc.id, 'parse_attendance');
+        if (result.attendees_count > 0) {
+          toast.success(`${result.attendees_count} participantes adicionados automaticamente`);
+          queryClient.invalidateQueries({ queryKey: ['assembly-attendees', id] });
+          queryClient.invalidateQueries({ queryKey: ['documents', 'assembly', id] });
+        } else {
+          toast.warning('Não foi possível identificar participantes no documento');
+        }
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Erro ao processar lista de presença');
+    } finally {
+      setUploadingAttendance(false);
+    }
     e.target.value = '';
   };
 
@@ -253,6 +300,27 @@ export default function AssembleiaDetail() {
 
             {/* Presença */}
             <TabsContent value="presenca" className="mt-4 space-y-4">
+              {/* Upload attendance list */}
+              <div className="rounded-lg border-2 border-dashed border-accent/30 bg-accent/5 p-4">
+                <div className="flex items-center gap-3">
+                  <Upload className="h-5 w-5 text-accent shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">Carregar lista de presença</p>
+                    <p className="text-xs text-muted-foreground">Faça upload de um PDF ou foto da folha de presenças. A IA extrai e cria os participantes automaticamente.</p>
+                  </div>
+                  <label>
+                    <Button size="sm" variant="outline" className="gap-1.5" asChild disabled={uploadingAttendance}>
+                      <span>
+                        {uploadingAttendance ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                        {uploadingAttendance ? 'A processar...' : 'Upload'}
+                      </span>
+                    </Button>
+                    <input type="file" accept="image/*,.pdf" className="hidden" onChange={handleAttendanceUpload} disabled={uploadingAttendance} />
+                  </label>
+                </div>
+              </div>
+
+              {/* Manual add */}
               <div className="flex gap-2 flex-wrap">
                 <Input placeholder="Nome" value={newAttendeeName} onChange={e => setNewAttendeeName(e.target.value)} className="flex-1 min-w-[150px] h-9" />
                 <Input placeholder="Fração" value={newAttendeeUnit} onChange={e => setNewAttendeeUnit(e.target.value)} className="w-[100px] h-9" />
@@ -275,14 +343,16 @@ export default function AssembleiaDetail() {
                     <thead><tr className="border-b bg-muted/30">
                       <th className="px-4 py-2 text-left font-medium text-muted-foreground">Nome</th>
                       <th className="px-4 py-2 text-left font-medium text-muted-foreground">Fração</th>
+                      <th className="px-4 py-2 text-left font-medium text-muted-foreground">‰</th>
                       <th className="px-4 py-2 text-left font-medium text-muted-foreground">Tipo</th>
                       <th className="px-4 py-2 w-10"></th>
                     </tr></thead>
                     <tbody>
                       {attendees.map(a => (
                         <tr key={a.id} className="border-b last:border-0">
-                          <td className="px-4 py-2 font-medium">{a.attendee_name}</td>
+                          <td className="px-4 py-2 font-medium">{a.attendee_name}{a.represented_by ? <span className="text-xs text-muted-foreground ml-1">(rep. {a.represented_by})</span> : ''}</td>
                           <td className="px-4 py-2 text-muted-foreground">{a.unit_code || '—'}</td>
+                          <td className="px-4 py-2 text-muted-foreground">{a.permillage ? `${a.permillage}‰` : '—'}</td>
                           <td className="px-4 py-2"><Badge variant="outline" className="text-[10px]">{a.attendance_type}</Badge></td>
                           <td className="px-4 py-2"><Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => deleteAttendee.mutate({ id: a.id, assemblyId: id! })}><X className="h-3 w-3" /></Button></td>
                         </tr>
