@@ -309,3 +309,14 @@ export async function fetchAssemblyStats() {
     pendingMinutes: pendingMinutes.length,
   };
 }
+
+// AI Minutes Generation
+export async function generateMinutesAI(assemblyId: string) {
+  const { data, error } = await supabase.functions.invoke('generate-minutes', {
+    body: { assembly_id: assemblyId },
+  });
+
+  if (error) throw error;
+  if (data?.error) throw new Error(data.error);
+  return data;
+}
