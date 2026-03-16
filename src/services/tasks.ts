@@ -98,9 +98,17 @@ export async function createTask(form: TaskFormData) {
 }
 
 export async function updateTask(id: string, form: Partial<TaskFormData> & { completed_at?: string | null }) {
+  const clean: Record<string, any> = {};
+  const allowedKeys = ['title', 'description', 'condominium_id', 'ticket_id', 'assembly_id', 'task_type', 'status', 'priority', 'due_date', 'assigned_user_id', 'completed_at'];
+  for (const key of allowedKeys) {
+    if (key in form) {
+      const val = (form as any)[key];
+      clean[key] = (typeof val === 'string' && val.trim() === '') ? null : val;
+    }
+  }
   const { data, error } = await supabase
     .from('tasks')
-    .update(form as any)
+    .update(clean)
     .eq('id', id)
     .select()
     .single();
