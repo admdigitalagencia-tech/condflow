@@ -32,6 +32,7 @@ import { toast } from 'sonner';
 export default function AssembleiaDetail() {
   const { id } = useParams<{ id: string }>();
   const nav = useNavigate();
+  const queryClient = useQueryClient();
   const { data: assembly, isLoading } = useAssembly(id!);
   const assemblyCondoId = assembly?.condominium_id || null;
   const { data: aiContext } = useCondominiumContext(assemblyCondoId);
