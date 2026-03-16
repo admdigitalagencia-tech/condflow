@@ -1,4 +1,4 @@
-import { Search, Bell, Plus, ChevronDown, Settings, User, LogOut, Sun, Moon } from 'lucide-react';
+import { Search, Bell, Plus, ChevronDown, Settings, User, LogOut, Sun, Moon, CalendarDays, ListChecks, AlertTriangle, Landmark } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SidebarTrigger } from '@/components/ui/sidebar';
@@ -8,10 +8,23 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useDeadlineNotifications } from '@/hooks/useDeadlineNotifications';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export function Topbar() {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
+  const notifications = useDeadlineNotifications();
+
+  const typeIcon = (type: string) => {
+    switch (type) {
+      case 'task': return <ListChecks className="h-4 w-4 text-primary" />;
+      case 'ticket': return <AlertTriangle className="h-4 w-4 text-orange-500" />;
+      case 'assembly': return <Landmark className="h-4 w-4 text-blue-500" />;
+      default: return <CalendarDays className="h-4 w-4" />;
+    }
+  };
 
   return (
     <header className="h-14 flex items-center border-b border-border/60 bg-card/80 backdrop-blur-sm px-4 shrink-0 gap-3 sticky top-0 z-30">
@@ -48,10 +61,57 @@ export function Topbar() {
         </Button>
 
         {/* Notifications */}
-        <Button variant="ghost" size="icon" className="relative h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground transition-colors">
-          <Bell className="h-4 w-4" />
-          <span className="absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-destructive" />
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="relative h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground transition-colors">
+              <Bell className="h-4 w-4" />
+              {notifications.length > 0 && (
+                <span className="absolute top-1.5 right-1.5 h-4 w-4 rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground flex items-center justify-center">
+                  {notifications.length}
+                </span>
+              )}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-80">
+            <div className="px-3 py-2 border-b border-border">
+              <p className="text-sm font-semibold">Notificações de Prazo</p>
+              <p className="text-xs text-muted-foreground">{notifications.length} alertas pendentes</p>
+            </div>
+            {notifications.length === 0 ? (
+              <div className="px-3 py-6 text-center text-sm text-muted-foreground">
+                Sem prazos próximos 🎉
+              </div>
+            ) : (
+              <ScrollArea className="max-h-[320px]">
+                {notifications.map(n => (
+                  <DropdownMenuItem
+                    key={n.id}
+                    className="flex items-start gap-3 px-3 py-2.5 cursor-pointer"
+                    onClick={() => navigate(n.route)}
+                  >
+                    <div className="mt-0.5">{typeIcon(n.type)}</div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{n.title}</p>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <Badge
+                          variant={n.urgency === 'today' ? 'destructive' : 'secondary'}
+                          className="text-[10px] px-1.5"
+                        >
+                          {n.urgency === 'today' ? '⚠️ Vence hoje' : '⏰ Vence amanhã'}
+                        </Badge>
+                        <span className="text-[10px] text-muted-foreground">{n.typeLabel}</span>
+                      </div>
+                    </div>
+                  </DropdownMenuItem>
+                ))}
+              </ScrollArea>
+            )}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => navigate('/agenda')} className="text-sm text-center justify-center text-primary font-medium">
+              Ver agenda completa
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         {/* Profile */}
         <DropdownMenu>
