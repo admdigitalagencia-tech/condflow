@@ -34,6 +34,7 @@ export default function MinutesEditor() {
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [sectionContent, setSectionContent] = useState('');
   const [initialized, setInitialized] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   // Initialize content from minute
   if (minute && !initialized) {
