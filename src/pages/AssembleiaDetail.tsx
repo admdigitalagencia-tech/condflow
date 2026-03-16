@@ -104,7 +104,7 @@ export default function AssembleiaDetail() {
     try {
       const path = `assemblies/${id}/${Date.now()}_${file.name}`;
       const { path: storedPath } = await uploadFile(file, path);
-      await createDoc.mutateAsync({
+      const doc = await createDoc.mutateAsync({
         title: file.name.replace(/\.[^/.]+$/, ''),
         document_type: 'fotografia',
         file_path: storedPath,
@@ -114,7 +114,50 @@ export default function AssembleiaDetail() {
         condominium_id: assembly.condominium_id,
       });
       toast.success('Documento anexado');
+      // Auto-extract text in background
+      if (doc?.id) {
+        setExtractingDoc(doc.id);
+        extractDocumentText(doc.id)
+          .then(() => toast.success('Texto extraído automaticamente'))
+          .catch(() => {})
+          .finally(() => setExtractingDoc(null));
+      }
     } catch { toast.error('Erro ao anexar'); }
+    e.target.value = '';
+  };
+
+  const handleAttendanceUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingAttendance(true);
+    try {
+      const path = `assemblies/${id}/${Date.now()}_${file.name}`;
+      const { path: storedPath } = await uploadFile(file, path);
+      const doc = await createDoc.mutateAsync({
+        title: file.name.replace(/\.[^/.]+$/, ''),
+        document_type: 'lista_presenca',
+        file_path: storedPath,
+        mime_type: file.type,
+        file_size: file.size,
+        assembly_id: id!,
+        condominium_id: assembly.condominium_id,
+      });
+      toast.info('A extrair lista de presença...');
+      if (doc?.id) {
+        const result = await extractDocumentText(doc.id, 'parse_attendance');
+        if (result.attendees_count > 0) {
+          toast.success(`${result.attendees_count} participantes adicionados automaticamente`);
+          // Invalidate attendees query
+          window.location.reload();
+        } else {
+          toast.warning('Não foi possível identificar participantes no documento');
+        }
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Erro ao processar lista de presença');
+    } finally {
+      setUploadingAttendance(false);
+    }
     e.target.value = '';
   };
 
