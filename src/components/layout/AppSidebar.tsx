@@ -20,6 +20,7 @@ const mainItems = [
   { title: 'Fornecedores', url: '/fornecedores', icon: Truck },
   { title: 'Tarefas', url: '/tarefas', icon: ListChecks },
   { title: 'Agenda', url: '/agenda', icon: CalendarDays },
+  { title: 'Gerador de Atas', url: '/gerador-ata', icon: ScrollText },
 ];
 
 const secondaryItems = [
