@@ -26,6 +26,7 @@ export default function MinutesEditor() {
   const { data: points } = useAssemblyPoints(assemblyId!);
   const { data: transcripts } = useTranscripts(assemblyId!);
   const { data: docs } = useDocumentsByAssembly(assemblyId!);
+  const generateAI = useGenerateMinutesAI();
 
   const [content, setContent] = useState('');
   const [activeSection, setActiveSection] = useState<string | null>(null);
