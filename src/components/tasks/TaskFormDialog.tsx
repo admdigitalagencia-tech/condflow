@@ -55,7 +55,16 @@ export function TaskFormDialog({ open, onOpenChange, task, defaultTicketId, defa
     if (!form.title.trim()) return;
 
     if (isEdit && task) {
-      const updates: any = { ...form };
+      const updates: Partial<TaskFormData> & { completed_at?: string | null } = {
+        title: form.title,
+        description: form.description || undefined,
+        condominium_id: form.condominium_id || undefined,
+        priority: form.priority,
+        status: form.status,
+        due_date: form.due_date,
+        task_type: form.task_type,
+        ticket_id: form.ticket_id || undefined,
+      };
       if (form.status === 'concluida' && task.status !== 'concluida') {
         updates.completed_at = new Date().toISOString();
       } else if (form.status !== 'concluida') {

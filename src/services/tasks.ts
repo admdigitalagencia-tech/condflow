@@ -81,9 +81,9 @@ export async function createTask(form: TaskFormData) {
     .insert({
       title: form.title,
       description: form.description || null,
-      condominium_id: form.condominium_id || null,
-      ticket_id: form.ticket_id || null,
-      assembly_id: form.assembly_id || null,
+      condominium_id: form.condominium_id && form.condominium_id.trim() !== '' ? form.condominium_id : null,
+      ticket_id: form.ticket_id && form.ticket_id.trim() !== '' ? form.ticket_id : null,
+      assembly_id: form.assembly_id && form.assembly_id.trim() !== '' ? form.assembly_id : null,
       task_type: form.task_type || 'manual',
       status: form.status || 'pendente',
       priority: form.priority || 'media',
@@ -98,9 +98,17 @@ export async function createTask(form: TaskFormData) {
 }
 
 export async function updateTask(id: string, form: Partial<TaskFormData> & { completed_at?: string | null }) {
+  const clean: Record<string, any> = {};
+  const allowedKeys = ['title', 'description', 'condominium_id', 'ticket_id', 'assembly_id', 'task_type', 'status', 'priority', 'due_date', 'assigned_user_id', 'completed_at'];
+  for (const key of allowedKeys) {
+    if (key in form) {
+      const val = (form as any)[key];
+      clean[key] = (typeof val === 'string' && val.trim() === '') ? null : val;
+    }
+  }
   const { data, error } = await supabase
     .from('tasks')
-    .update(form as any)
+    .update(clean)
     .eq('id', id)
     .select()
     .single();
