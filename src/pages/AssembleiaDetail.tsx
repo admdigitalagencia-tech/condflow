@@ -149,8 +149,8 @@ export default function AssembleiaDetail() {
         const result = await extractDocumentText(doc.id, 'parse_attendance');
         if (result.attendees_count > 0) {
           toast.success(`${result.attendees_count} participantes adicionados automaticamente`);
-          // Invalidate attendees query
-          window.location.reload();
+          queryClient.invalidateQueries({ queryKey: ['assembly-attendees', id] });
+          queryClient.invalidateQueries({ queryKey: ['documents', 'assembly', id] });
         } else {
           toast.warning('Não foi possível identificar participantes no documento');
         }
