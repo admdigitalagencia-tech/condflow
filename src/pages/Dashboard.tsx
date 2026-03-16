@@ -1,6 +1,8 @@
+import { useState, useMemo } from 'react';
 import {
   Building2, AlertTriangle, Calendar, Clock, AlertOctagon,
   ArrowRight, CheckCircle2, BookOpen, ListChecks, CalendarDays,
+  ChevronLeft, ChevronRight, Landmark,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCondominiums } from '@/hooks/useCondominiums';
@@ -16,8 +18,14 @@ import { KPICard } from '@/components/shared/KPICard';
 import { SummaryCard } from '@/components/shared/SummaryCard';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { format, parseISO, isAfter, isToday, isTomorrow } from 'date-fns';
+import { useAgendaItems, DeadlineItem } from '@/hooks/useDeadlineNotifications';
+import {
+  format, parseISO, isAfter, isToday, isTomorrow,
+  startOfMonth, endOfMonth, eachDayOfInterval, getDay,
+  addMonths, subMonths,
+} from 'date-fns';
 import { pt } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 export default function Dashboard() {
   const nav = useNavigate();
