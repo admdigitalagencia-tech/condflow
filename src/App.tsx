@@ -24,6 +24,7 @@ import Relatorios from '@/pages/Relatorios';
 import CentralIA from '@/pages/CentralIA';
 import Configuracoes from '@/pages/Configuracoes';
 import Tarefas from '@/pages/Tarefas';
+import GeradorAta from '@/pages/GeradorAta';
 import NotFound from '@/pages/NotFound';
 
 const queryClient = new QueryClient();
@@ -53,6 +54,7 @@ const App = () => (
             <Route path="/relatorios" element={<Relatorios />} />
             <Route path="/ia" element={<CentralIA />} />
             <Route path="/tarefas" element={<Tarefas />} />
+            <Route path="/gerador-ata" element={<GeradorAta />} />
             <Route path="/configuracoes" element={<Configuracoes />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

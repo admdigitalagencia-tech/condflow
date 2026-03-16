@@ -1,6 +1,6 @@
 import {
   Building2, LayoutDashboard, AlertTriangle, Users, FileText,
-  Calendar, Truck, CalendarDays, BarChart3, Brain, Settings, ListChecks,
+  Calendar, Truck, CalendarDays, BarChart3, Brain, Settings, ListChecks, ScrollText,
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
@@ -20,6 +20,7 @@ const mainItems = [
   { title: 'Fornecedores', url: '/fornecedores', icon: Truck },
   { title: 'Tarefas', url: '/tarefas', icon: ListChecks },
   { title: 'Agenda', url: '/agenda', icon: CalendarDays },
+  { title: 'Gerador de Atas', url: '/gerador-ata', icon: ScrollText },
 ];
 
 const secondaryItems = [
