@@ -8,7 +8,9 @@ import {
   fetchMinutes, fetchMinute, createMinute, updateMinute,
   fetchMinuteSections, createMinuteSection, updateMinuteSection,
   fetchAssemblyStats,
+  generateMinutesAI,
 } from '@/services/assemblies';
+import { toast } from 'sonner';
 
 export function useAssemblies() {
   return useQuery({ queryKey: ['assemblies'], queryFn: fetchAssemblies });
