@@ -81,9 +81,9 @@ export async function createTask(form: TaskFormData) {
     .insert({
       title: form.title,
       description: form.description || null,
-      condominium_id: form.condominium_id || null,
-      ticket_id: form.ticket_id || null,
-      assembly_id: form.assembly_id || null,
+      condominium_id: form.condominium_id && form.condominium_id.trim() !== '' ? form.condominium_id : null,
+      ticket_id: form.ticket_id && form.ticket_id.trim() !== '' ? form.ticket_id : null,
+      assembly_id: form.assembly_id && form.assembly_id.trim() !== '' ? form.assembly_id : null,
       task_type: form.task_type || 'manual',
       status: form.status || 'pendente',
       priority: form.priority || 'media',
