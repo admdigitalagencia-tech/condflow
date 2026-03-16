@@ -346,25 +346,75 @@ export default function AssembleiaDetail() {
 
             {/* Ata */}
             <TabsContent value="ata" className="mt-4 space-y-4">
+              {/* AI Generation Card */}
+              <div className="rounded-lg border-2 border-dashed border-primary/30 bg-primary/5 p-6">
+                <div className="flex items-start gap-4">
+                  <div className="flex items-center justify-center h-12 w-12 rounded-xl bg-primary/10 shrink-0">
+                    <Sparkles className="h-6 w-6 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-base mb-1">Gerar ATA automática</h3>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      A IA analisa a ordem de trabalhos, lista de presença, notas e transcrições para gerar uma ata profissional automaticamente.
+                    </p>
+                    <div className="flex flex-wrap gap-2 text-xs text-muted-foreground mb-4">
+                      <Badge variant="outline" className={`text-[10px] ${(points?.length || 0) > 0 ? 'border-green-500 text-green-600' : ''}`}>
+                        {(points?.length || 0) > 0 ? '✓' : '○'} {points?.length || 0} pontos
+                      </Badge>
+                      <Badge variant="outline" className={`text-[10px] ${(attendees?.length || 0) > 0 ? 'border-green-500 text-green-600' : ''}`}>
+                        {(attendees?.length || 0) > 0 ? '✓' : '○'} {attendees?.length || 0} participantes
+                      </Badge>
+                      <Badge variant="outline" className={`text-[10px] ${assembly.notes ? 'border-green-500 text-green-600' : ''}`}>
+                        {assembly.notes ? '✓' : '○'} Notas
+                      </Badge>
+                      <Badge variant="outline" className={`text-[10px] ${(transcripts?.length || 0) > 0 ? 'border-green-500 text-green-600' : ''}`}>
+                        {(transcripts?.length || 0) > 0 ? '✓' : '○'} Transcrição
+                      </Badge>
+                    </div>
+                    <Button
+                      onClick={() => generateMinutesAI.mutate(id!)}
+                      disabled={generateMinutesAI.isPending || (points?.length || 0) === 0}
+                      className="gap-2"
+                    >
+                      {generateMinutesAI.isPending ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          A gerar ata... (pode demorar 30s)
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="h-4 w-4" />
+                          Gerar ATA automática
+                        </>
+                      )}
+                    </Button>
+                    {(points?.length || 0) === 0 && (
+                      <p className="text-xs text-destructive mt-2">Adicione pelo menos um ponto à ordem de trabalhos para gerar a ata.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Existing minutes */}
               <div className="flex gap-2">
-                <Button size="sm" onClick={handleCreateDraft} className="gap-1.5"><Plus className="h-3.5 w-3.5" /> Novo Rascunho</Button>
-                {minutes && minutes.length > 0 && (
-                  <Button size="sm" variant="outline" className="gap-1.5" onClick={() => nav(`/assembleias/${id}/ata/${minutes[0].id}`)}>
-                    <BookOpen className="h-3.5 w-3.5" /> Abrir Editor
-                  </Button>
-                )}
+                <Button size="sm" variant="outline" onClick={handleCreateDraft} className="gap-1.5"><Plus className="h-3.5 w-3.5" /> Rascunho Manual</Button>
               </div>
               {(!minutes || minutes.length === 0) ? (
-                <EmptyState icon={BookOpen} title="Sem atas" description="Crie um rascunho de ata para começar." />
+                <EmptyState icon={BookOpen} title="Sem atas" description="Gere uma ata automática ou crie um rascunho manual." />
               ) : (
                 <div className="space-y-2">
                   {minutes.map(m => (
                     <div key={m.id} className="flex items-center justify-between p-3 rounded-lg border bg-card cursor-pointer hover:shadow-sm transition-shadow" onClick={() => nav(`/assembleias/${id}/ata/${m.id}`)}>
                       <div>
                         <p className="text-sm font-medium">{m.title}</p>
-                        <p className="text-xs text-muted-foreground">v{m.version_number} · {m.generation_source} · {new Date(m.created_at).toLocaleDateString('pt-PT')}</p>
+                        <p className="text-xs text-muted-foreground">v{m.version_number} · {m.generation_source === 'ai' ? '🤖 Gerada por IA' : 'Manual'} · {new Date(m.created_at).toLocaleDateString('pt-PT')}</p>
                       </div>
-                      <Badge variant="outline" className="text-[10px]">{m.status}</Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="text-[10px]">{m.status}</Badge>
+                        <Button size="sm" variant="ghost" className="gap-1 text-xs" onClick={(e) => { e.stopPropagation(); nav(`/assembleias/${id}/ata/${m.id}`); }}>
+                          <BookOpen className="h-3.5 w-3.5" /> Editar
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>
