@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { SummaryCard } from '@/components/shared/SummaryCard';
 import {
   ArrowLeft, Save, RefreshCw, FileText, Brain, Plus,
-  ListOrdered, StickyNote, Mic, BookOpen, Download, GitCompare,
+  ListOrdered, StickyNote, Mic, BookOpen, Download, GitCompare, Sparkles, Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
