@@ -400,11 +400,11 @@ export default function AssembleiaDetail() {
             {/* Transcrição */}
             <TabsContent value="transcricao" className="mt-4 space-y-4">
               <label className="flex items-center gap-2 cursor-pointer">
-                <Button size="sm" variant="outline" className="gap-1.5" asChild><span><Mic className="h-3.5 w-3.5" /> Carregar áudio</span></Button>
-                <input type="file" accept="audio/*" className="hidden" onChange={handleAudioUpload} />
+                <Button size="sm" variant="outline" className="gap-1.5" asChild><span><Mic className="h-3.5 w-3.5" /> Carregar transcrição ou áudio</span></Button>
+                <input type="file" accept="audio/*,.txt,text/plain" className="hidden" onChange={handleTranscriptUpload} />
               </label>
               {(!transcripts || transcripts.length === 0) ? (
-                <EmptyState icon={Mic} title="Sem transcrições" description="Carregue um ficheiro de áudio para iniciar a transcrição." />
+                <EmptyState icon={Mic} title="Sem transcrições" description="Carregue um ficheiro TXT com a transcrição ou um áudio." />
               ) : (
                 <div className="space-y-3">
                   {transcripts.map(t => (
