@@ -1,6 +1,8 @@
+import { useState, useMemo } from 'react';
 import {
   Building2, AlertTriangle, Calendar, Clock, AlertOctagon,
   ArrowRight, CheckCircle2, BookOpen, ListChecks, CalendarDays,
+  ChevronLeft, ChevronRight, Landmark,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCondominiums } from '@/hooks/useCondominiums';
@@ -16,8 +18,116 @@ import { KPICard } from '@/components/shared/KPICard';
 import { SummaryCard } from '@/components/shared/SummaryCard';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { format, parseISO, isAfter, isToday, isTomorrow } from 'date-fns';
+import { useAgendaItems, DeadlineItem } from '@/hooks/useDeadlineNotifications';
+import {
+  format, parseISO, isAfter, isToday, isTomorrow,
+  startOfMonth, endOfMonth, eachDayOfInterval, getDay,
+  addMonths, subMonths,
+} from 'date-fns';
 import { pt } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
+
+const WEEKDAYS_SHORT = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'];
+
+function DashboardCalendar({
+  items, currentMonth, onMonthChange, selectedDate, onSelectDate, onNavigate,
+}: {
+  items: DeadlineItem[];
+  currentMonth: Date;
+  onMonthChange: (d: Date) => void;
+  selectedDate: string | null;
+  onSelectDate: (d: string | null) => void;
+  onNavigate: (path: string) => void;
+}) {
+  const todayStr = format(new Date(), 'yyyy-MM-dd');
+  const itemsByDate = useMemo(() => {
+    const map: Record<string, DeadlineItem[]> = {};
+    items.forEach(i => { if (!map[i.date]) map[i.date] = []; map[i.date].push(i); });
+    return map;
+  }, [items]);
+
+  const monthStart = startOfMonth(currentMonth);
+  const monthEnd = endOfMonth(currentMonth);
+  const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
+  const startOffset = (getDay(monthStart) + 6) % 7;
+  const selectedItems = selectedDate ? (itemsByDate[selectedDate] || []) : [];
+
+  const typeColor = (type: string) => {
+    if (type === 'task') return 'bg-primary';
+    if (type === 'ticket') return 'bg-orange-500';
+    return 'bg-blue-500';
+  };
+
+  return (
+    <div className="space-y-3">
+      {/* Month nav */}
+      <div className="flex items-center justify-between">
+        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onMonthChange(subMonths(currentMonth, 1))}>
+          <ChevronLeft className="h-3.5 w-3.5" />
+        </Button>
+        <span className="text-sm font-medium capitalize">{format(currentMonth, 'MMMM yyyy', { locale: pt })}</span>
+        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onMonthChange(addMonths(currentMonth, 1))}>
+          <ChevronRight className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+
+      {/* Grid */}
+      <div className="grid grid-cols-7 gap-0">
+        {WEEKDAYS_SHORT.map((d, i) => (
+          <div key={i} className="text-center text-[10px] font-medium text-muted-foreground py-1">{d}</div>
+        ))}
+        {Array.from({ length: startOffset }).map((_, i) => <div key={`e${i}`} />)}
+        {days.map(day => {
+          const ds = format(day, 'yyyy-MM-dd');
+          const dayItems = itemsByDate[ds] || [];
+          const isSel = selectedDate === ds;
+          const today = ds === todayStr;
+          return (
+            <div
+              key={ds}
+              className={cn(
+                'flex flex-col items-center py-1 cursor-pointer rounded-md transition-colors hover:bg-muted/50',
+                isSel && 'bg-primary/10 ring-1 ring-primary/30',
+                today && !isSel && 'bg-accent/50',
+              )}
+              onClick={() => onSelectDate(isSel ? null : ds)}
+            >
+              <span className={cn('text-xs', today && 'font-bold text-primary')}>{format(day, 'd')}</span>
+              {dayItems.length > 0 && (
+                <div className="flex gap-0.5 mt-0.5">
+                  {dayItems.slice(0, 3).map((it, idx) => (
+                    <span key={idx} className={cn('h-1.5 w-1.5 rounded-full', typeColor(it.type))} />
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Selected date items */}
+      {selectedDate && (
+        <div className="border-t pt-2 space-y-1">
+          <p className="text-xs font-medium text-muted-foreground capitalize">
+            {isToday(parseISO(selectedDate + 'T00:00:00')) ? 'Hoje' : format(parseISO(selectedDate + 'T00:00:00'), "d 'de' MMMM", { locale: pt })}
+          </p>
+          {selectedItems.length === 0 ? (
+            <p className="text-xs text-muted-foreground py-2">Sem eventos.</p>
+          ) : selectedItems.map(item => (
+            <div key={item.id} className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/40 cursor-pointer" onClick={() => onNavigate(item.route)}>
+              <span className={cn('h-2 w-2 rounded-full shrink-0', typeColor(item.type))} />
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-medium truncate">{item.title}</p>
+                {item.condominiumName && <p className="text-[10px] text-muted-foreground truncate">{item.condominiumName}</p>}
+              </div>
+              <Badge variant="outline" className="text-[9px] shrink-0">{item.typeLabel}</Badge>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function Dashboard() {
   const nav = useNavigate();
@@ -28,6 +138,9 @@ export default function Dashboard() {
   const { data: taskStats } = useTaskStats();
   const { data: assemblies } = useAssemblies();
   const { data: allTasks } = useTasks();
+  const agendaItems = useAgendaItems();
+  const [calMonth, setCalMonth] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   const activeCount = (condominiums || []).filter(c => c.active).length;
   const recentTickets = (tickets || []).slice(0, 5);
@@ -150,44 +263,19 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Agenda + Tasks detail row */}
+      {/* Agenda Calendar + Tasks detail row */}
       <div className="grid lg:grid-cols-2 gap-6">
-        <SummaryCard title="Agenda — Próximos Eventos" action={
+        <SummaryCard title="Agenda" action={
           <Button variant="ghost" size="sm" className="text-xs gap-1 text-muted-foreground hover:text-foreground" onClick={() => nav('/agenda')}>Ver agenda <ArrowRight className="h-3 w-3" /></Button>
         }>
-          {upcomingAssemblies.length > 0 ? (
-            <div className="space-y-1">
-              {upcomingAssemblies.map(a => (
-                <div key={a.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/40 cursor-pointer transition-colors" onClick={() => nav(`/assembleias/${a.id}`)}>
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <div className="flex h-10 w-10 flex-col items-center justify-center rounded-lg bg-primary/8 shrink-0">
-                      <span className="text-[10px] font-medium text-primary uppercase leading-none">
-                        {format(parseISO(a.scheduled_date), 'MMM', { locale: pt })}
-                      </span>
-                      <span className="text-sm font-bold text-primary leading-tight">
-                        {format(parseISO(a.scheduled_date), 'd')}
-                      </span>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium truncate">{a.title}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {(a as any).condominiums?.name}
-                        {a.scheduled_time ? ` · ${a.scheduled_time.slice(0, 5)}` : ''}
-                      </p>
-                    </div>
-                  </div>
-                  <Badge variant="secondary" className="shrink-0 text-[10px]">
-                    {assemblyStatusLabel(a.status)}
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center gap-2 py-6 text-muted-foreground">
-              <CalendarDays className="h-5 w-5 opacity-40" />
-              <p className="text-sm">Nenhum evento agendado</p>
-            </div>
-          )}
+          <DashboardCalendar
+            items={agendaItems}
+            currentMonth={calMonth}
+            onMonthChange={setCalMonth}
+            selectedDate={selectedDate}
+            onSelectDate={setSelectedDate}
+            onNavigate={nav}
+          />
         </SummaryCard>
 
         <SummaryCard title="Tarefas — Próximas Ações" action={
