@@ -8,11 +8,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { SummaryCard } from '@/components/shared/SummaryCard';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import {
   ArrowLeft, Save, RefreshCw, FileText, Brain, Plus,
-  ListOrdered, StickyNote, Mic, BookOpen, Download, GitCompare, Sparkles, Loader2,
+  ListOrdered, StickyNote, Mic, BookOpen, Download, GitCompare, Sparkles, Loader2, FileDown, FileType,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { exportToDocx, exportToPdf } from '@/services/minutesExport';
 
 export default function MinutesEditor() {
   const { id: assemblyId, minuteId } = useParams<{ id: string; minuteId: string }>();
