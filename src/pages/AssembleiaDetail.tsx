@@ -163,28 +163,41 @@ export default function AssembleiaDetail() {
     e.target.value = '';
   };
 
-  const handleAudioUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleTranscriptUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
+      const isTxt = file.name.toLowerCase().endsWith('.txt') || file.type === 'text/plain';
       const path = `transcripts/${id}/${Date.now()}_${file.name}`;
       const { path: storedPath } = await uploadFile(file, path);
       await createDoc.mutateAsync({
-        title: `Áudio - ${file.name}`,
-        document_type: 'audio',
+        title: `${isTxt ? 'Transcrição' : 'Áudio'} - ${file.name}`,
+        document_type: isTxt ? 'transcricao' : 'audio',
         file_path: storedPath,
         mime_type: file.type,
         file_size: file.size,
         assembly_id: id!,
         condominium_id: assembly.condominium_id,
       });
-      await createTranscript.mutateAsync({
-        assembly_id: id!,
-        source_type: 'audio_upload',
-        processing_status: 'pendente',
-      });
-      toast.success('Áudio carregado — transcrição pendente');
-    } catch { toast.error('Erro ao carregar áudio'); }
+
+      if (isTxt) {
+        const rawText = await file.text();
+        await createTranscript.mutateAsync({
+          assembly_id: id!,
+          source_type: 'text_upload',
+          processing_status: 'concluida',
+          raw_text: rawText,
+        });
+        toast.success('Transcrição carregada com sucesso');
+      } else {
+        await createTranscript.mutateAsync({
+          assembly_id: id!,
+          source_type: 'audio_upload',
+          processing_status: 'pendente',
+        });
+        toast.success('Áudio carregado — transcrição pendente');
+      }
+    } catch { toast.error('Erro ao carregar ficheiro'); }
     e.target.value = '';
   };
 
