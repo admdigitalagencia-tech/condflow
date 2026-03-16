@@ -343,14 +343,16 @@ export default function AssembleiaDetail() {
                     <thead><tr className="border-b bg-muted/30">
                       <th className="px-4 py-2 text-left font-medium text-muted-foreground">Nome</th>
                       <th className="px-4 py-2 text-left font-medium text-muted-foreground">Fração</th>
+                      <th className="px-4 py-2 text-left font-medium text-muted-foreground">‰</th>
                       <th className="px-4 py-2 text-left font-medium text-muted-foreground">Tipo</th>
                       <th className="px-4 py-2 w-10"></th>
                     </tr></thead>
                     <tbody>
                       {attendees.map(a => (
                         <tr key={a.id} className="border-b last:border-0">
-                          <td className="px-4 py-2 font-medium">{a.attendee_name}</td>
+                          <td className="px-4 py-2 font-medium">{a.attendee_name}{a.represented_by ? <span className="text-xs text-muted-foreground ml-1">(rep. {a.represented_by})</span> : ''}</td>
                           <td className="px-4 py-2 text-muted-foreground">{a.unit_code || '—'}</td>
+                          <td className="px-4 py-2 text-muted-foreground">{a.permillage ? `${a.permillage}‰` : '—'}</td>
                           <td className="px-4 py-2"><Badge variant="outline" className="text-[10px]">{a.attendance_type}</Badge></td>
                           <td className="px-4 py-2"><Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => deleteAttendee.mutate({ id: a.id, assemblyId: id! })}><X className="h-3 w-3" /></Button></td>
                         </tr>
