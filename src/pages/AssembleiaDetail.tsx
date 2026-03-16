@@ -58,6 +58,8 @@ export default function AssembleiaDetail() {
   const [editingPoint, setEditingPoint] = useState<string | null>(null);
   const [editPointData, setEditPointData] = useState<Record<string, string>>({});
   const [newStatus, setNewStatus] = useState('');
+  const [uploadingAttendance, setUploadingAttendance] = useState(false);
+  const [extractingDoc, setExtractingDoc] = useState<string | null>(null);
 
   if (isLoading) return <div className="flex justify-center py-12"><div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" /></div>;
   if (!assembly) return <div className="p-6">Assembleia não encontrada.</div>;
