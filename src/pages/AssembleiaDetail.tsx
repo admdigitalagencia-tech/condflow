@@ -163,28 +163,41 @@ export default function AssembleiaDetail() {
     e.target.value = '';
   };
 
-  const handleAudioUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleTranscriptUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
+      const isTxt = file.name.toLowerCase().endsWith('.txt') || file.type === 'text/plain';
       const path = `transcripts/${id}/${Date.now()}_${file.name}`;
       const { path: storedPath } = await uploadFile(file, path);
       await createDoc.mutateAsync({
-        title: `Áudio - ${file.name}`,
-        document_type: 'audio',
+        title: `${isTxt ? 'Transcrição' : 'Áudio'} - ${file.name}`,
+        document_type: isTxt ? 'transcricao' : 'audio',
         file_path: storedPath,
         mime_type: file.type,
         file_size: file.size,
         assembly_id: id!,
         condominium_id: assembly.condominium_id,
       });
-      await createTranscript.mutateAsync({
-        assembly_id: id!,
-        source_type: 'audio_upload',
-        processing_status: 'pendente',
-      });
-      toast.success('Áudio carregado — transcrição pendente');
-    } catch { toast.error('Erro ao carregar áudio'); }
+
+      if (isTxt) {
+        const rawText = await file.text();
+        await createTranscript.mutateAsync({
+          assembly_id: id!,
+          source_type: 'text_upload',
+          processing_status: 'concluida',
+          raw_text: rawText,
+        });
+        toast.success('Transcrição carregada com sucesso');
+      } else {
+        await createTranscript.mutateAsync({
+          assembly_id: id!,
+          source_type: 'audio_upload',
+          processing_status: 'pendente',
+        });
+        toast.success('Áudio carregado — transcrição pendente');
+      }
+    } catch { toast.error('Erro ao carregar ficheiro'); }
     e.target.value = '';
   };
 
@@ -387,11 +400,11 @@ export default function AssembleiaDetail() {
             {/* Transcrição */}
             <TabsContent value="transcricao" className="mt-4 space-y-4">
               <label className="flex items-center gap-2 cursor-pointer">
-                <Button size="sm" variant="outline" className="gap-1.5" asChild><span><Mic className="h-3.5 w-3.5" /> Carregar áudio</span></Button>
-                <input type="file" accept="audio/*" className="hidden" onChange={handleAudioUpload} />
+                <Button size="sm" variant="outline" className="gap-1.5" asChild><span><Mic className="h-3.5 w-3.5" /> Carregar transcrição ou áudio</span></Button>
+                <input type="file" accept="audio/*,.txt,text/plain" className="hidden" onChange={handleTranscriptUpload} />
               </label>
               {(!transcripts || transcripts.length === 0) ? (
-                <EmptyState icon={Mic} title="Sem transcrições" description="Carregue um ficheiro de áudio para iniciar a transcrição." />
+                <EmptyState icon={Mic} title="Sem transcrições" description="Carregue um ficheiro TXT com a transcrição ou um áudio." />
               ) : (
                 <div className="space-y-3">
                   {transcripts.map(t => (
