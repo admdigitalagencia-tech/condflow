@@ -8,11 +8,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { SummaryCard } from '@/components/shared/SummaryCard';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import {
   ArrowLeft, Save, RefreshCw, FileText, Brain, Plus,
-  ListOrdered, StickyNote, Mic, BookOpen, Download, GitCompare, Sparkles, Loader2,
+  ListOrdered, StickyNote, Mic, BookOpen, Download, GitCompare, Sparkles, Loader2, FileDown, FileType,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { exportToDocx, exportToPdf } from '@/services/minutesExport';
 
 export default function MinutesEditor() {
   const { id: assemblyId, minuteId } = useParams<{ id: string; minuteId: string }>();
@@ -32,6 +34,7 @@ export default function MinutesEditor() {
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [sectionContent, setSectionContent] = useState('');
   const [initialized, setInitialized] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   // Initialize content from minute
   if (minute && !initialized) {
@@ -88,9 +91,37 @@ export default function MinutesEditor() {
           <Button size="sm" variant="outline" className="gap-1.5" disabled>
             <GitCompare className="h-3.5 w-3.5" /> Comparar
           </Button>
-          <Button size="sm" variant="outline" className="gap-1.5" disabled>
-            <Download className="h-3.5 w-3.5" /> Exportar
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" variant="outline" className="gap-1.5" disabled={exporting}>
+                {exporting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />} Exportar
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={async () => {
+                setExporting(true);
+                try {
+                  const condoName = (assembly as any)?.condominiums?.name;
+                  exportToPdf(content, minute.title, condoName, assembly?.title);
+                  toast.success('PDF aberto para impressão');
+                } catch (e: any) { toast.error(e.message || 'Erro ao exportar PDF'); }
+                finally { setExporting(false); }
+              }}>
+                <FileDown className="h-4 w-4 mr-2" /> Exportar PDF
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={async () => {
+                setExporting(true);
+                try {
+                  const condoName = (assembly as any)?.condominiums?.name;
+                  await exportToDocx(content, minute.title, condoName);
+                  toast.success('DOCX descarregado');
+                } catch (e: any) { toast.error(e.message || 'Erro ao exportar DOCX'); }
+                finally { setExporting(false); }
+              }}>
+                <FileType className="h-4 w-4 mr-2" /> Exportar DOCX
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button size="sm" className="gap-1.5" onClick={handleSave} disabled={updateMinute.isPending}>
             <Save className="h-3.5 w-3.5" /> Guardar
           </Button>
