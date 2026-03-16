@@ -9,7 +9,7 @@ import {
   useMinutes, useCreateMinute, useGenerateMinutesAI,
 } from '@/hooks/useAssemblies';
 import { useDocumentsByAssembly, useCreateDocument } from '@/hooks/useDocuments';
-import { uploadFile } from '@/services/documents';
+import { uploadFile, extractDocumentText } from '@/services/documents';
 import { assemblyStatusLabel, assemblyTypeLabel, minutesStatusLabel, ASSEMBLY_STATUSES } from '@/services/assemblies';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
