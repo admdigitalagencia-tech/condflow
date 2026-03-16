@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useMinute, useUpdateMinute, useMinuteSections, useCreateMinuteSection, useUpdateMinuteSection } from '@/hooks/useAssemblies';
+import { useMinute, useUpdateMinute, useMinuteSections, useCreateMinuteSection, useUpdateMinuteSection, useGenerateMinutesAI } from '@/hooks/useAssemblies';
 import { useAssembly, useAssemblyPoints, useTranscripts } from '@/hooks/useAssemblies';
 import { useDocumentsByAssembly } from '@/hooks/useDocuments';
 import { Button } from '@/components/ui/button';
