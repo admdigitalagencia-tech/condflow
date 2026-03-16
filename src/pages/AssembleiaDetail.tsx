@@ -48,6 +48,7 @@ export default function AssembleiaDetail() {
   const createTranscript = useCreateTranscript();
   const { data: minutes } = useMinutes(id!);
   const createMinute = useCreateMinute();
+  const generateMinutesAI = useGenerateMinutesAI();
 
   const [editOpen, setEditOpen] = useState(false);
   const [newPointTitle, setNewPointTitle] = useState('');
