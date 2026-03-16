@@ -158,8 +158,15 @@ export default function MinutesEditor() {
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold">Conteúdo Completo da Ata</h3>
                 <div className="flex gap-2">
-                  <Button size="sm" variant="outline" className="gap-1 text-xs" disabled>
-                    <Brain className="h-3 w-3" /> Gerar Rascunho IA
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1 text-xs"
+                    onClick={() => generateAI.mutate(assemblyId!)}
+                    disabled={generateAI.isPending}
+                  >
+                    {generateAI.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                    {generateAI.isPending ? 'A gerar...' : 'Gerar nova versão IA'}
                   </Button>
                 </div>
               </div>
