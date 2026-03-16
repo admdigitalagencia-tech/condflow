@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useMinute, useUpdateMinute, useMinuteSections, useCreateMinuteSection, useUpdateMinuteSection } from '@/hooks/useAssemblies';
+import { useMinute, useUpdateMinute, useMinuteSections, useCreateMinuteSection, useUpdateMinuteSection, useGenerateMinutesAI } from '@/hooks/useAssemblies';
 import { useAssembly, useAssemblyPoints, useTranscripts } from '@/hooks/useAssemblies';
 import { useDocumentsByAssembly } from '@/hooks/useDocuments';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { SummaryCard } from '@/components/shared/SummaryCard';
 import {
   ArrowLeft, Save, RefreshCw, FileText, Brain, Plus,
-  ListOrdered, StickyNote, Mic, BookOpen, Download, GitCompare,
+  ListOrdered, StickyNote, Mic, BookOpen, Download, GitCompare, Sparkles, Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -26,6 +26,7 @@ export default function MinutesEditor() {
   const { data: points } = useAssemblyPoints(assemblyId!);
   const { data: transcripts } = useTranscripts(assemblyId!);
   const { data: docs } = useDocumentsByAssembly(assemblyId!);
+  const generateAI = useGenerateMinutesAI();
 
   const [content, setContent] = useState('');
   const [activeSection, setActiveSection] = useState<string | null>(null);
@@ -157,8 +158,15 @@ export default function MinutesEditor() {
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold">Conteúdo Completo da Ata</h3>
                 <div className="flex gap-2">
-                  <Button size="sm" variant="outline" className="gap-1 text-xs" disabled>
-                    <Brain className="h-3 w-3" /> Gerar Rascunho IA
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1 text-xs"
+                    onClick={() => generateAI.mutate(assemblyId!)}
+                    disabled={generateAI.isPending}
+                  >
+                    {generateAI.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                    {generateAI.isPending ? 'A gerar...' : 'Gerar nova versão IA'}
                   </Button>
                 </div>
               </div>

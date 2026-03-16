@@ -8,7 +8,9 @@ import {
   fetchMinutes, fetchMinute, createMinute, updateMinute,
   fetchMinuteSections, createMinuteSection, updateMinuteSection,
   fetchAssemblyStats,
+  generateMinutesAI,
 } from '@/services/assemblies';
+import { toast } from 'sonner';
 
 export function useAssemblies() {
   return useQuery({ queryKey: ['assemblies'], queryFn: fetchAssemblies });
@@ -196,5 +198,24 @@ export function useUpdateMinuteSection() {
     mutationFn: ({ id, values, minuteId }: { id: string; values: Record<string, any>; minuteId: string }) =>
       updateMinuteSection(id, values),
     onSuccess: (_, { minuteId }) => { qc.invalidateQueries({ queryKey: ['minute-sections', minuteId] }); },
+  });
+}
+
+export function useGenerateMinutesAI() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (assemblyId: string) => generateMinutesAI(assemblyId),
+    onSuccess: (data) => {
+      const assemblyId = data?.minute?.assembly_id;
+      if (assemblyId) {
+        qc.invalidateQueries({ queryKey: ['minutes', assemblyId] });
+        qc.invalidateQueries({ queryKey: ['assemblies', assemblyId] });
+        qc.invalidateQueries({ queryKey: ['assemblies'] });
+      }
+      toast.success('Ata gerada com sucesso pela IA');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Erro ao gerar ata');
+    },
   });
 }
