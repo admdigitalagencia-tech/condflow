@@ -36,6 +36,9 @@ export default function Dashboard() {
   const { data: taskStats } = useTaskStats();
   const { data: assemblies } = useAssemblies();
   const { data: allTasks } = useTasks();
+  const agendaItems = useAgendaItems();
+  const [calMonth, setCalMonth] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   const activeCount = (condominiums || []).filter(c => c.active).length;
   const recentTickets = (tickets || []).slice(0, 5);
