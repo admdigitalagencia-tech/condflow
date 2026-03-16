@@ -78,54 +78,72 @@ serve(async (req) => {
 
 REGRAS FUNDAMENTAIS:
 - NÃO invente informações que não constem dos dados
-- Use linguagem formal, clara e administrativa em português de Portugal
-- Siga RIGOROSAMENTE o modelo de ata abaixo
+- Use português europeu formal, estilo jurídico-administrativo
+- Escreva em frases completas e narrativa cronológica
+- NUNCA use bullet points no corpo da ata
+- Use o pretérito (passado)
 - Se não houver informação sobre um ponto, indique "Sem informação registada"
-- Utilize o tempo verbal no pretérito (passado)
 
-MODELO DA ATA:
-
----
-
-ATA DA ASSEMBLEIA [TIPO] DE CONDÓMINOS
-
-[Nome do Condomínio]
-
-Aos [data por extenso], pelas [hora], reuniram-se em [local] os condóminos do edifício sito em [morada], para a realização da Assembleia [Tipo] de Condóminos, com a seguinte ordem de trabalhos:
-
-[Lista numerada da ordem de trabalhos]
-
-PRESENÇAS:
-[Lista de participantes com frações e tipo de presença]
-
-Verificado o quórum, [informação sobre quórum], deu-se início aos trabalhos, tendo presidido [nome do presidente da mesa].
+ESTRUTURA OBRIGATÓRIA DA ATA:
 
 ---
 
-Para cada ponto da ordem de trabalhos:
+ACTA
 
-PONTO [N] — [Título]
+ATA Nº [version_number]
 
-[Resumo da discussão baseado nos dados disponíveis]
+"Aos [data por extenso], reuniu-se em [tipo de convocatória] e em sessão [tipo de assembleia — ordinária/extraordinária], pelas [hora], na [local da reunião], os proprietários das frações autónomas do prédio constituído em regime de propriedade horizontal, sito em [morada do condomínio]."
 
-Deliberação: [Decisão tomada ou "Não foi tomada deliberação formal"]
+Em seguida indicar forma de convocatória, antecedência legal e ordem de trabalhos.
 
----
+ORDEM DE TRABALHOS
 
-DELIBERAÇÕES APROVADAS:
-[Lista resumida de todas as decisões aprovadas]
+Apresentar numerada:
+1º [título]
+2º [título]
+...
 
-ENCERRAMENTO:
-Nada mais havendo a tratar, foi encerrada a sessão pelas [hora estimada], da qual se lavrou a presente ata que, depois de lida e aprovada, vai ser assinada pelos presentes.
+PRESENÇAS
+
+Descrever em texto corrido:
+- frações presentes e representadas
+- permilagem total representada
+- verificação de quórum
+
+Exemplo: "Estiveram presentes ou representados os condóminos das frações (...) conforme folha de presenças anexa, representando uma permilagem total de (...)‰."
+
+DESENVOLVIMENTO DA ASSEMBLEIA
+
+Para cada ponto da ordem de trabalhos, escrever em estilo narrativo formal:
+
+"No Ponto [N] da Ordem de Trabalhos, [resumo da apresentação]. [Resumo da discussão e esclarecimentos prestados]. [Decisão final e resultado da votação]."
+
+A linguagem deve ser narrativa e administrativa. Transformar notas e transcrições em texto formal completo.
+
+DELIBERAÇÕES
+
+Quando houver votação ou decisão, registar:
+- "aprovado por unanimidade"
+- "aprovado por maioria de X‰ contra Y‰"
+- "rejeitado"
+- abstenções
+
+Se existirem quadros ou anexos, referenciar: "conforme quadro anexo" ou "Quadro I – [Título]".
+
+ENCERRAMENTO
+
+"Nada mais havendo a tratar, foi encerrada a reunião pelas [hora estimada], da qual se lavrou a presente ata que, depois de lida e aprovada, vai ser assinada pelos presentes."
 
 [Local], [Data]
 
-O Presidente da Mesa: _______________
-O Secretário: _______________
+ASSINATURAS
+
+O Presidente da Assembleia: _______________
+A Administração: _______________
 
 ---`;
 
-    const userPrompt = `Gera a ata formal desta assembleia com base nos seguintes dados:
+    const userPrompt = `Gera a ata formal desta assembleia seguindo RIGOROSAMENTE o modelo fornecido.
 
 ## INFORMAÇÕES DA ASSEMBLEIA
 - Condomínio: ${condoInfo}
@@ -135,6 +153,7 @@ O Secretário: _______________
 - Local: ${assembly.location || "N/A"}
 - Presidida por: ${assembly.chaired_by || "N/A"}
 ${assembly.quorum_info ? `- Quórum: ${assembly.quorum_info}` : ""}
+- Número da versão: ${versionNumber}
 
 ## ORDEM DE TRABALHOS (texto da convocatória)
 ${assembly.agenda_text || "Sem ordem de trabalhos em texto"}
@@ -153,7 +172,7 @@ ${transcriptionText ? `## TRANSCRIÇÃO DA REUNIÃO\n${transcriptionText}` : ""}
 
 ${docsText ? `## CONTEÚDO DE DOCUMENTOS ANEXOS\n${docsText}` : ""}
 
-Gera a ata completa seguindo o modelo fornecido. Usa APENAS os dados acima.`;
+Gera a ata completa seguindo o modelo oficial. Usa APENAS os dados acima. Escreve em português europeu formal, estilo jurídico-administrativo, sem bullet points, com narrativa cronológica.`;
 
     // Call AI
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
