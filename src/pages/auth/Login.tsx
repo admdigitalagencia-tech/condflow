@@ -3,8 +3,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Building2, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import logoCondflow from '@/assets/logo-condflow.png';
 
 export default function Login() {
   const { signIn } = useAuth();
@@ -28,10 +29,7 @@ export default function Login() {
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
-          <div className="h-12 w-12 rounded-xl bg-primary flex items-center justify-center mb-3">
-            <Building2 className="h-6 w-6 text-primary-foreground" />
-          </div>
-          <h1 className="text-xl font-bold tracking-tight">CondFlow</h1>
+          <img src={logoCondflow} alt="CondFlow" className="h-12 object-contain mb-3" />
           <p className="text-sm text-muted-foreground">Gestão Inteligente de Condomínios</p>
         </div>
 
