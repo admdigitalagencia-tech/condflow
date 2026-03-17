@@ -31,7 +31,7 @@ export default function Login() {
           <div className="h-12 w-12 rounded-xl bg-primary flex items-center justify-center mb-3">
             <Building2 className="h-6 w-6 text-primary-foreground" />
           </div>
-          <h1 className="text-xl font-bold tracking-tight">Gestor IA</h1>
+          <h1 className="text-xl font-bold tracking-tight">CondFlow</h1>
           <p className="text-sm text-muted-foreground">Gestão Inteligente de Condomínios</p>
         </div>
 

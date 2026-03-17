@@ -113,7 +113,7 @@ export function AppSidebar() {
       <SidebarFooter className="border-t border-sidebar-border px-4 py-3">
         {!collapsed && (
           <p className="text-[10px] text-sidebar-muted text-center tracking-wide">
-            CondoFlow v1.0
+            CondFlow v1.0
           </p>
         )}
       </SidebarFooter>

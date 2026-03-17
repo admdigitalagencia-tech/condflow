@@ -126,7 +126,7 @@ export function Topbar() {
           <DropdownMenuContent align="end" className="w-56">
             <div className="px-3 py-2.5">
               <p className="text-sm font-medium">Gestor</p>
-              <p className="text-xs text-muted-foreground">gestor@condoflow.pt</p>
+              <p className="text-xs text-muted-foreground"><p className="text-xs text-muted-foreground">gestor@condflow.pt</p></p>
             </div>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => navigate('/configuracoes')} className="text-sm">
