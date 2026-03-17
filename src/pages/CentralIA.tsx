@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { streamAI } from '@/services/aiAssistant';
 import { buildCondominiumPromptContext, fetchTicketContext, fetchAssemblyContext } from '@/services/condominiumContext';
@@ -6,7 +6,6 @@ import { useCondominiumContext } from '@/hooks/useCondominiumContext';
 import { useCondominiums } from '@/hooks/useCondominiums';
 import { useTicketsByCondominium } from '@/hooks/useTickets';
 import { useAssembliesByCondominium } from '@/hooks/useAssemblies';
-import { useDocumentsByCondominium } from '@/hooks/useDocuments';
 import { categoryLabel, statusLabel, priorityLabel } from '@/services/tickets';
 import { assemblyStatusLabel, assemblyTypeLabel, minutesStatusLabel } from '@/services/assemblies';
 import { PageHeader } from '@/components/shared/PageHeader';
@@ -17,12 +16,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import {
-  Brain, Sparkles, Loader2, Copy, Check, Send, RotateCcw,
-  FileText, MessageSquare, ListChecks, Calendar, Building2,
-  AlertTriangle, ClipboardList, History, Search,
+  Brain, Sparkles, Loader2, Copy, Check, Send,
+  Building2, AlertTriangle, Calendar, ListChecks,
+  MessageSquare, ClipboardList, History, User, Trash2, Maximize2, Minimize2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
+type ChatMessage = { role: 'user' | 'assistant'; content: string };
 type ContextType = 'general' | 'ticket' | 'assembly' | 'document' | 'task';
 
 const ACTIONS = [
@@ -31,123 +31,157 @@ const ACTIONS = [
   { key: 'assembly_summary', label: 'Resumir assembleia', icon: Calendar, context: 'assembly' as ContextType },
   { key: 'formal_response', label: 'Gerar resposta formal', icon: MessageSquare, context: 'general' as ContextType },
   { key: 'next_steps', label: 'Sugerir próximos passos', icon: ListChecks, context: 'general' as ContextType },
-  { key: 'assembly_tasks', label: 'Gerar tarefas pós-assembleia', icon: ClipboardList, context: 'assembly' as ContextType },
+  { key: 'assembly_tasks', label: 'Tarefas pós-assembleia', icon: ClipboardList, context: 'assembly' as ContextType },
   { key: 'history_query', label: 'Consultar histórico', icon: History, context: 'general' as ContextType },
 ];
 
 export default function CentralIA() {
   const { data: condominiums } = useCondominiums();
-  const [selectedCondoId, setSelectedCondoId] = useState<string>('');
-  const [selectedAction, setSelectedAction] = useState<string>('');
+  const [selectedCondoId, setSelectedCondoId] = useState('');
+  const [selectedAction, setSelectedAction] = useState('');
   const [selectedTicketId, setSelectedTicketId] = useState('');
   const [selectedAssemblyId, setSelectedAssemblyId] = useState('');
-  const [prompt, setPrompt] = useState('');
-  const [output, setOutput] = useState('');
+  const [input, setInput] = useState('');
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
+  const [expanded, setExpanded] = useState(false);
+
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const { data: context, isLoading: contextLoading } = useCondominiumContext(selectedCondoId || null);
   const { data: tickets } = useTicketsByCondominium(selectedCondoId);
   const { data: assemblies } = useAssembliesByCondominium(selectedCondoId);
-  const { data: documents } = useDocumentsByCondominium(selectedCondoId);
 
   const selectedCondo = condominiums?.find(c => c.id === selectedCondoId);
   const action = ACTIONS.find(a => a.key === selectedAction);
   const needsTicket = action?.context === 'ticket';
   const needsAssembly = action?.context === 'assembly';
 
-  const openTickets = (tickets || []).filter(t => !['resolvido', 'encerrado'].includes(t.status));
-  const pendingTasks = context?.tasks.filter(t => !['concluida', 'cancelada'].includes(t.status)) || [];
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
 
-  const handleSubmit = useCallback(async () => {
-    if (!selectedCondoId || !context) return;
-    setLoading(true);
-    setOutput('');
-
-    let fullPrompt = prompt;
-    let feature = selectedAction || 'general';
-    let contextStr = buildCondominiumPromptContext(context);
-
-    // Enrich with specific entity context
+  const buildExtraContext = useCallback(async () => {
+    let extra = '';
     if (needsTicket && selectedTicketId) {
       try {
         const tc = await fetchTicketContext(selectedTicketId);
         const t = tc.ticket;
-        contextStr += `\n\n### OCORRÊNCIA SELECIONADA\n`;
-        contextStr += `Código: ${t.code}\nTítulo: ${t.title}\nCategoria: ${categoryLabel(t.category)}\nPrioridade: ${priorityLabel(t.priority)}\nEstado: ${statusLabel(t.status)}\nDescrição: ${t.description || 'Sem descrição'}\nAberta em: ${new Date(t.opened_at).toLocaleDateString('pt-PT')}\nPrazo: ${t.due_date ? new Date(t.due_date).toLocaleDateString('pt-PT') : 'N/A'}\n`;
+        extra += `\n\n### OCORRÊNCIA SELECIONADA\nCódigo: ${t.code}\nTítulo: ${t.title}\nCategoria: ${categoryLabel(t.category)}\nPrioridade: ${priorityLabel(t.priority)}\nEstado: ${statusLabel(t.status)}\nDescrição: ${t.description || 'Sem descrição'}\nAberta em: ${new Date(t.opened_at).toLocaleDateString('pt-PT')}\nPrazo: ${t.due_date ? new Date(t.due_date).toLocaleDateString('pt-PT') : 'N/A'}\n`;
         if (tc.updates.length > 0) {
-          contextStr += `\nHistórico de atualizações:\n`;
-          tc.updates.forEach(u => {
-            contextStr += `- [${u.update_type}] ${u.body || ''} (${new Date(u.created_at).toLocaleDateString('pt-PT')})\n`;
-          });
+          extra += `\nHistórico:\n`;
+          tc.updates.forEach(u => { extra += `- [${u.update_type}] ${u.body || ''} (${new Date(u.created_at).toLocaleDateString('pt-PT')})\n`; });
         }
-        if (!fullPrompt.trim()) fullPrompt = `Analisa a ocorrência ${t.code} — ${t.title}`;
-      } catch { /* continue with base context */ }
+      } catch { /* fallback */ }
     }
-
     if (needsAssembly && selectedAssemblyId) {
       try {
         const ac = await fetchAssemblyContext(selectedAssemblyId);
         const a = ac.assembly;
-        contextStr += `\n\n### ASSEMBLEIA SELECIONADA\n`;
-        contextStr += `Título: ${a.title}\nTipo: ${assemblyTypeLabel(a.assembly_type)}\nData: ${new Date(a.scheduled_date).toLocaleDateString('pt-PT')}\nEstado: ${assemblyStatusLabel(a.status)}\nAta: ${minutesStatusLabel(a.minutes_status)}\nLocal: ${a.location || 'N/A'}\nAgenda: ${a.agenda_text || 'N/A'}\n`;
+        extra += `\n\n### ASSEMBLEIA SELECIONADA\nTítulo: ${a.title}\nTipo: ${assemblyTypeLabel(a.assembly_type)}\nData: ${new Date(a.scheduled_date).toLocaleDateString('pt-PT')}\nEstado: ${assemblyStatusLabel(a.status)}\nAta: ${minutesStatusLabel(a.minutes_status)}\nLocal: ${a.location || 'N/A'}\nAgenda: ${a.agenda_text || 'N/A'}\n`;
         if (ac.points.length > 0) {
-          contextStr += `\nPontos da ordem de trabalhos:\n`;
-          ac.points.forEach(p => {
-            contextStr += `${p.point_order}. ${p.title}`;
-            if (p.deliberation_text) contextStr += ` — Deliberação: ${p.deliberation_text}`;
-            if (p.voting_result_text) contextStr += ` | Votação: ${p.voting_result_text}`;
-            contextStr += `\n`;
-          });
+          extra += `\nPontos:\n`;
+          ac.points.forEach(p => { extra += `${p.point_order}. ${p.title}${p.deliberation_text ? ` — ${p.deliberation_text}` : ''}\n`; });
         }
         if (ac.attendees.length > 0) {
-          contextStr += `\nParticipantes: ${ac.attendees.map(att => att.attendee_name).join(', ')}\n`;
+          extra += `\nParticipantes: ${ac.attendees.map(att => att.attendee_name).join(', ')}\n`;
         }
-        if (!fullPrompt.trim()) fullPrompt = `Analisa a assembleia "${a.title}"`;
-      } catch { /* continue with base context */ }
+      } catch { /* fallback */ }
     }
+    return extra;
+  }, [needsTicket, needsAssembly, selectedTicketId, selectedAssemblyId]);
 
-    if (!fullPrompt.trim()) {
-      const defaultPrompts: Record<string, string> = {
-        condominium_summary: `Gera um resumo operacional completo deste condomínio`,
-        formal_response: `Gera uma comunicação formal para os condóminos`,
-        next_steps: `Quais são os próximos passos operacionais prioritários para este condomínio?`,
-        history_query: prompt || `Resume o histórico recente deste condomínio`,
+  const handleSend = useCallback(async (overrideText?: string) => {
+    if (!selectedCondoId || !context) return;
+    const text = overrideText || input.trim();
+    if (!text && !selectedAction) return;
+
+    const userContent = text || (() => {
+      const defaults: Record<string, string> = {
+        condominium_summary: 'Gera um resumo operacional completo deste condomínio',
+        formal_response: 'Gera uma comunicação formal para os condóminos',
+        next_steps: 'Quais são os próximos passos operacionais prioritários?',
+        history_query: 'Resume o histórico recente deste condomínio',
+        ticket_summary: 'Analisa esta ocorrência',
+        assembly_summary: 'Analisa esta assembleia',
+        assembly_tasks: 'Gera as tarefas pós-assembleia',
       };
-      fullPrompt = defaultPrompts[feature] || `Analisa o contexto deste condomínio e fornece informações relevantes`;
-    }
+      return defaults[selectedAction] || 'Analisa o contexto deste condomínio';
+    })();
 
-    let result = '';
+    const userMsg: ChatMessage = { role: 'user', content: userContent };
+    const newMessages = [...messages, userMsg];
+    setMessages(newMessages);
+    setInput('');
+    setLoading(true);
+
+    let contextStr = buildCondominiumPromptContext(context);
+    const extra = await buildExtraContext();
+    contextStr += extra;
+
+    let assistantSoFar = '';
     await streamAI({
-      messages: [{ role: 'user', content: fullPrompt }],
-      feature,
+      messages: newMessages,
+      feature: selectedAction || 'general',
       condominiumContext: contextStr,
-      onDelta: (chunk) => { result += chunk; setOutput(result); },
+      onDelta: (chunk) => {
+        assistantSoFar += chunk;
+        setMessages(prev => {
+          const last = prev[prev.length - 1];
+          if (last?.role === 'assistant') {
+            return prev.map((m, i) => i === prev.length - 1 ? { ...m, content: assistantSoFar } : m);
+          }
+          return [...prev, { role: 'assistant', content: assistantSoFar }];
+        });
+      },
       onDone: () => setLoading(false),
       onError: (err) => { toast.error(err); setLoading(false); },
     });
-  }, [selectedCondoId, context, selectedAction, selectedTicketId, selectedAssemblyId, prompt, needsTicket, needsAssembly]);
+  }, [selectedCondoId, context, selectedAction, input, messages, buildExtraContext]);
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(output);
-    setCopied(true);
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  const handleCopy = (idx: number) => {
+    navigator.clipboard.writeText(messages[idx].content);
+    setCopiedIdx(idx);
     toast.success('Copiado');
-    setTimeout(() => setCopied(false), 2000);
+    setTimeout(() => setCopiedIdx(null), 2000);
+  };
+
+  const handleClearChat = () => {
+    setMessages([]);
+    setSelectedAction('');
+  };
+
+  const handleActionClick = (key: string) => {
+    setSelectedAction(key);
+    setSelectedTicketId('');
+    setSelectedAssemblyId('');
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <PageHeader
         title="Central Inteligente"
-        description="Assistente IA contextual — selecione um condomínio para análises com dados reais"
+        description="Assistente IA conversacional — selecione um condomínio e converse sobre os seus dados"
       />
 
-      {/* Condominium Selector */}
+      {/* Condo selector */}
       <Card>
-        <CardContent className="pt-6">
+        <CardContent className="pt-5 pb-4">
           <div className="flex items-center gap-3">
-            <Building2 className="h-5 w-5 text-accent-foreground shrink-0" />
-            <Select value={selectedCondoId} onValueChange={(v) => { setSelectedCondoId(v); setSelectedTicketId(''); setSelectedAssemblyId(''); setOutput(''); }}>
+            <Building2 className="h-5 w-5 text-primary shrink-0" />
+            <Select value={selectedCondoId} onValueChange={(v) => { setSelectedCondoId(v); setSelectedTicketId(''); setSelectedAssemblyId(''); setMessages([]); }}>
               <SelectTrigger className="flex-1">
                 <SelectValue placeholder="Selecionar condomínio para contexto IA..." />
               </SelectTrigger>
@@ -172,7 +206,7 @@ export default function CentralIA() {
             <Brain className="h-12 w-12 text-muted-foreground/40 mb-4" />
             <h3 className="text-lg font-semibold mb-2">Selecione um condomínio</h3>
             <p className="text-sm text-muted-foreground max-w-md">
-              Para usar a IA com contexto real, selecione primeiro um condomínio acima. A IA irá analisar ocorrências, assembleias, tarefas e documentos desse condomínio.
+              Para conversar com a IA sobre dados reais, selecione primeiro um condomínio.
             </p>
           </CardContent>
         </Card>
@@ -185,253 +219,191 @@ export default function CentralIA() {
       )}
 
       {selectedCondoId && context && (
-        <>
-          {/* Context Summary Card */}
-          <Card className="bg-accent/5 border-accent/20">
-            <CardHeader className="pb-3">
-              <div className="flex items-center gap-2">
-                <Building2 className="h-4 w-4 text-accent-foreground" />
-                <CardTitle className="text-sm">{context.condominium.name}</CardTitle>
-              </div>
-              {context.condominium.address && (
-                <CardDescription className="text-xs">{context.condominium.address}</CardDescription>
-              )}
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                <ContextKPI label="Ocorrências Abertas" value={context.stats.openTickets} highlight={context.stats.openTickets > 0} />
-                <ContextKPI label="Total Ocorrências" value={context.stats.totalTickets} />
-                <ContextKPI label="Assembleias" value={context.stats.totalAssemblies} />
-                <ContextKPI label="Documentos" value={context.stats.totalDocuments} />
-                <ContextKPI label="Tarefas Pendentes" value={context.stats.pendingTasks} highlight={context.stats.pendingTasks > 0} />
-                <ContextKPI label="Última Assembleia" value={context.stats.lastAssemblyDate ? new Date(context.stats.lastAssemblyDate).toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit' }) : '—'} />
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="grid lg:grid-cols-3 gap-6">
-            {/* Main area */}
-            <div className="lg:col-span-2 space-y-4">
-              {/* Action Selection */}
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm">Ação da IA</CardTitle>
-                  <CardDescription className="text-xs">Escolha o que deseja fazer e forneça detalhes adicionais</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                    {ACTIONS.map(a => (
-                      <Button
-                        key={a.key}
-                        variant={selectedAction === a.key ? 'default' : 'outline'}
-                        size="sm"
-                        className="justify-start gap-2 h-auto py-2.5 text-left"
-                        onClick={() => { setSelectedAction(a.key); setSelectedTicketId(''); setSelectedAssemblyId(''); }}
-                      >
-                        <a.icon className="h-3.5 w-3.5 shrink-0" />
-                        <span className="text-xs leading-tight">{a.label}</span>
-                      </Button>
-                    ))}
-                  </div>
-
-                  {/* Entity selector */}
-                  {needsTicket && (
-                    <Select value={selectedTicketId} onValueChange={setSelectedTicketId}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecionar ocorrência..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {(tickets || []).map(t => (
-                          <SelectItem key={t.id} value={t.id}>
-                            <span className="font-mono text-[10px] mr-2">{t.code}</span>
-                            {t.title}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-
-                  {needsAssembly && (
-                    <Select value={selectedAssemblyId} onValueChange={setSelectedAssemblyId}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecionar assembleia..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {(assemblies || []).map(a => (
-                          <SelectItem key={a.id} value={a.id}>
-                            {a.title} — {new Date(a.scheduled_date).toLocaleDateString('pt-PT')}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-
-                  <Textarea
-                    placeholder={selectedAction === 'history_query'
-                      ? 'Faça uma pergunta sobre o histórico deste condomínio...'
-                      : 'Instruções adicionais (opcional)...'}
-                    value={prompt}
-                    onChange={e => setPrompt(e.target.value)}
-                    rows={3}
-                  />
-
+        <div className="grid lg:grid-cols-4 gap-4">
+          {/* Sidebar — actions & entity selectors */}
+          <div className="lg:col-span-1 space-y-3">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xs uppercase tracking-wider text-muted-foreground">Ações Rápidas</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-1.5">
+                {ACTIONS.map(a => (
                   <Button
-                    onClick={handleSubmit}
-                    disabled={loading || (!selectedAction && !prompt.trim()) || (needsTicket && !selectedTicketId) || (needsAssembly && !selectedAssemblyId)}
-                    className="gap-2"
+                    key={a.key}
+                    variant={selectedAction === a.key ? 'default' : 'ghost'}
+                    size="sm"
+                    className="w-full justify-start gap-2 h-auto py-2 text-xs"
+                    onClick={() => handleActionClick(a.key)}
                   >
-                    {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                    Gerar
+                    <a.icon className="h-3.5 w-3.5 shrink-0" />
+                    {a.label}
                   </Button>
-                </CardContent>
-              </Card>
+                ))}
+              </CardContent>
+            </Card>
 
-              {/* Output */}
-              {(output || loading) && (
-                <Card>
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Sparkles className="h-4 w-4 text-accent-foreground" />
-                        <CardTitle className="text-sm">Resultado</CardTitle>
-                        {selectedCondo && <Badge variant="outline" className="text-[10px]">{selectedCondo.name}</Badge>}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        {output && !loading && (
-                          <Button variant="ghost" size="sm" className="gap-1.5 h-7" onClick={handleSubmit}>
-                            <RotateCcw className="h-3 w-3" />
-                            <span className="text-xs">Regenerar</span>
-                          </Button>
-                        )}
-                        {output && (
-                          <Button variant="ghost" size="sm" className="gap-1.5 h-7" onClick={handleCopy}>
-                            {copied ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
-                            <span className="text-xs">{copied ? 'Copiado' : 'Copiar'}</span>
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <ScrollArea className="max-h-[500px]">
-                      <div className="prose prose-sm dark:prose-invert max-w-none">
-                        <ReactMarkdown>{output || 'A gerar...'}</ReactMarkdown>
-                      </div>
-                    </ScrollArea>
-                    {loading && (
-                      <div className="flex items-center gap-1.5 mt-3 text-xs text-muted-foreground">
-                        <Loader2 className="h-3 w-3 animate-spin" /> A processar com contexto de {selectedCondo?.name}...
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-
-            {/* Sidebar */}
-            <div className="space-y-4">
-              {/* Quick actions */}
+            {needsTicket && (
               <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm">Ações Rápidas</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <Button variant="outline" size="sm" className="w-full justify-start gap-2 text-xs h-auto py-2"
-                    onClick={() => { setSelectedAction('condominium_summary'); setPrompt(''); handleQuickSubmit('condominium_summary', ''); }}>
-                    <Building2 className="h-3.5 w-3.5 shrink-0" /> Resumo geral do prédio
-                  </Button>
-                  <Button variant="outline" size="sm" className="w-full justify-start gap-2 text-xs h-auto py-2"
-                    onClick={() => { setSelectedAction('next_steps'); setPrompt(''); handleQuickSubmit('next_steps', ''); }}>
-                    <ListChecks className="h-3.5 w-3.5 shrink-0" /> Prioridades operacionais
-                  </Button>
-                  <Button variant="outline" size="sm" className="w-full justify-start gap-2 text-xs h-auto py-2"
-                    onClick={() => { setSelectedAction('formal_response'); setPrompt('Gera uma comunicação sobre o estado atual das ocorrências em curso'); handleQuickSubmit('formal_response', 'Gera uma comunicação sobre o estado atual das ocorrências em curso'); }}>
-                    <MessageSquare className="h-3.5 w-3.5 shrink-0" /> Comunicação sobre ocorrências
-                  </Button>
-                  <Button variant="outline" size="sm" className="w-full justify-start gap-2 text-xs h-auto py-2"
-                    onClick={() => { setSelectedAction('history_query'); setPrompt('Quais são os problemas recorrentes neste condomínio?'); handleQuickSubmit('history_query', 'Quais são os problemas recorrentes neste condomínio?'); }}>
-                    <Search className="h-3.5 w-3.5 shrink-0" /> Problemas recorrentes
-                  </Button>
+                <CardContent className="pt-4 pb-3">
+                  <Select value={selectedTicketId} onValueChange={setSelectedTicketId}>
+                    <SelectTrigger className="text-xs">
+                      <SelectValue placeholder="Selecionar ocorrência..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(tickets || []).map(t => (
+                        <SelectItem key={t.id} value={t.id}>
+                          <span className="font-mono text-[10px] mr-1">{t.code}</span> {t.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </CardContent>
               </Card>
+            )}
 
-              {/* Open tickets summary */}
-              {openTickets.length > 0 && (
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm">Ocorrências Abertas ({openTickets.length})</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      {openTickets.slice(0, 5).map(t => (
-                        <div key={t.id} className="flex items-center gap-2 text-xs cursor-pointer hover:bg-muted/50 rounded p-1.5 -mx-1.5"
-                          onClick={() => { setSelectedAction('ticket_summary'); setSelectedTicketId(t.id); }}>
-                          <span className="font-mono text-[10px] text-muted-foreground">{t.code}</span>
-                          <span className="flex-1 truncate">{t.title}</span>
-                          <Badge variant="outline" className="text-[9px] shrink-0">{priorityLabel(t.priority)}</Badge>
-                        </div>
+            {needsAssembly && (
+              <Card>
+                <CardContent className="pt-4 pb-3">
+                  <Select value={selectedAssemblyId} onValueChange={setSelectedAssemblyId}>
+                    <SelectTrigger className="text-xs">
+                      <SelectValue placeholder="Selecionar assembleia..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(assemblies || []).map(a => (
+                        <SelectItem key={a.id} value={a.id}>
+                          {a.title} — {new Date(a.scheduled_date).toLocaleDateString('pt-PT')}
+                        </SelectItem>
                       ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+                    </SelectContent>
+                  </Select>
+                </CardContent>
+              </Card>
+            )}
 
-              {/* Pending tasks summary */}
-              {pendingTasks.length > 0 && (
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm">Tarefas Pendentes ({pendingTasks.length})</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      {pendingTasks.slice(0, 5).map(t => (
-                        <div key={t.id} className="text-xs p-1.5">
-                          <span className="truncate">{t.title}</span>
-                          {t.due_date && <span className="text-muted-foreground ml-2">· {new Date(t.due_date).toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit' })}</span>}
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+            {/* Context badge */}
+            <div className="px-1">
+              <Badge variant="outline" className="text-[10px] gap-1">
+                <Building2 className="h-3 w-3" /> {selectedCondo?.name}
+              </Badge>
             </div>
           </div>
-        </>
+
+          {/* Chat area */}
+          <div className="lg:col-span-3 flex flex-col">
+            <Card className={`flex flex-col transition-all ${expanded ? 'fixed inset-4 z-50' : ''}`}>
+              {/* Header */}
+              <CardHeader className="pb-2 border-b border-border/50 flex-row items-center justify-between space-y-0">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  <CardTitle className="text-sm">Conversa IA</CardTitle>
+                  {messages.length > 0 && (
+                    <Badge variant="secondary" className="text-[10px]">{Math.floor(messages.length / 2)} troca{Math.floor(messages.length / 2) !== 1 ? 's' : ''}</Badge>
+                  )}
+                </div>
+                <div className="flex items-center gap-1">
+                  {messages.length > 0 && (
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleClearChat} title="Limpar conversa">
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setExpanded(!expanded)} title={expanded ? 'Minimizar' : 'Expandir'}>
+                    {expanded ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
+                  </Button>
+                </div>
+              </CardHeader>
+
+              {/* Messages */}
+              <div
+                ref={scrollRef}
+                className={`flex-1 overflow-y-auto p-4 space-y-4 ${expanded ? '' : 'min-h-[350px] max-h-[55vh]'}`}
+              >
+                {messages.length === 0 && !loading && (
+                  <div className="flex flex-col items-center justify-center h-full text-center py-12">
+                    <Brain className="h-10 w-10 text-muted-foreground/30 mb-3" />
+                    <p className="text-sm text-muted-foreground">Selecione uma ação rápida ou escreva uma pergunta para iniciar a conversa.</p>
+                    <p className="text-xs text-muted-foreground/60 mt-1">As conversas são temporárias e não são guardadas.</p>
+                  </div>
+                )}
+
+                {messages.map((msg, idx) => (
+                  <div key={idx} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    {msg.role === 'assistant' && (
+                      <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                        <Sparkles className="h-3.5 w-3.5 text-primary" />
+                      </div>
+                    )}
+                    <div className={`relative group max-w-[85%] rounded-xl px-4 py-3 text-sm ${
+                      msg.role === 'user'
+                        ? 'bg-primary text-primary-foreground rounded-br-sm'
+                        : 'bg-muted/60 border border-border/50 rounded-bl-sm'
+                    }`}>
+                      {msg.role === 'assistant' ? (
+                        <div className="prose prose-sm dark:prose-invert max-w-none">
+                          <ReactMarkdown>{msg.content}</ReactMarkdown>
+                        </div>
+                      ) : (
+                        <p className="whitespace-pre-wrap">{msg.content}</p>
+                      )}
+                      {msg.role === 'assistant' && msg.content && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="absolute -right-9 top-1 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => handleCopy(idx)}
+                        >
+                          {copiedIdx === idx ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
+                        </Button>
+                      )}
+                    </div>
+                    {msg.role === 'user' && (
+                      <div className="h-7 w-7 rounded-full bg-primary flex items-center justify-center shrink-0 mt-0.5">
+                        <User className="h-3.5 w-3.5 text-primary-foreground" />
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                {loading && messages[messages.length - 1]?.role !== 'assistant' && (
+                  <div className="flex gap-3">
+                    <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                      <Sparkles className="h-3.5 w-3.5 text-primary" />
+                    </div>
+                    <div className="bg-muted/60 border border-border/50 rounded-xl rounded-bl-sm px-4 py-3">
+                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Input area */}
+              <div className="border-t border-border/50 p-3">
+                <div className="flex gap-2 items-end">
+                  <Textarea
+                    ref={inputRef}
+                    placeholder="Escreva a sua pergunta ou peça mais detalhes..."
+                    value={input}
+                    onChange={e => setInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    rows={expanded ? 4 : 2}
+                    className="resize-y min-h-[40px] max-h-[200px] text-sm"
+                  />
+                  <Button
+                    onClick={() => handleSend()}
+                    disabled={loading || (!input.trim() && !selectedAction)}
+                    size="icon"
+                    className="shrink-0 h-10 w-10"
+                  >
+                    {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                  </Button>
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-1.5 px-0.5">
+                  Enter para enviar · Shift+Enter para nova linha · As conversas não são guardadas
+                </p>
+              </div>
+            </Card>
+          </div>
+        </div>
       )}
-    </div>
-  );
-
-  function handleQuickSubmit(feature: string, text: string) {
-    if (!context) return;
-    setLoading(true);
-    setOutput('');
-
-    const contextStr = buildCondominiumPromptContext(context);
-    const defaultPrompts: Record<string, string> = {
-      condominium_summary: 'Gera um resumo operacional completo deste condomínio',
-      next_steps: 'Quais são os próximos passos operacionais prioritários?',
-      formal_response: text || 'Gera uma comunicação formal',
-      history_query: text || 'Resume o histórico recente',
-    };
-    const finalPrompt = text || defaultPrompts[feature] || 'Analisa o contexto';
-
-    let result = '';
-    streamAI({
-      messages: [{ role: 'user', content: finalPrompt }],
-      feature,
-      condominiumContext: contextStr,
-      onDelta: (chunk) => { result += chunk; setOutput(result); },
-      onDone: () => setLoading(false),
-      onError: (err) => { toast.error(err); setLoading(false); },
-    });
-  }
-}
-
-function ContextKPI({ label, value, highlight }: { label: string; value: number | string; highlight?: boolean }) {
-  return (
-    <div className="text-center p-2 rounded-lg bg-background border">
-      <p className={`text-lg font-bold ${highlight ? 'text-destructive' : ''}`}>{value}</p>
-      <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">{label}</p>
     </div>
   );
 }

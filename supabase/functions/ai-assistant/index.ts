@@ -14,7 +14,7 @@ serve(async (req) => {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     const basePrompts: Record<string, string> = {
-      condominium_summary: `Você é um assistente de gestão de condomínios em Portugal (CondoFlow). Analise os dados do condomínio fornecido e gere um resumo operacional completo:
+      condominium_summary: `Você é um assistente de gestão de condomínios em Portugal (CondFlow). Analise os dados do condomínio fornecido e gere um resumo operacional completo:
 1. **Visão Geral**: síntese da situação atual do prédio
 2. **Problemas Prioritários**: ocorrências abertas mais urgentes
 3. **Decisões Recentes**: últimas deliberações de assembleias
@@ -58,9 +58,9 @@ Responda APENAS com base nos dados fornecidos. Use português de Portugal.`,
 
       next_steps: `Você é um assistente de gestão de condomínios em Portugal. Com base no contexto fornecido, sugira os próximos passos operacionais que o gestor deve tomar. Seja concreto, prático e priorize por urgência. Responda APENAS com base nos dados fornecidos. Use português de Portugal.`,
 
-      history_query: `Você é um assistente de gestão de condomínios em Portugal (CondoFlow). O utilizador vai fazer perguntas sobre o histórico de um condomínio específico. Responda APENAS com base nos dados fornecidos. Se não houver informação suficiente nos dados, diga explicitamente que não encontrou dados sobre o tema. Nunca invente informações. Use português de Portugal formal.`,
+      history_query: `Você é um assistente de gestão de condomínios em Portugal (CondFlow). O utilizador vai fazer perguntas sobre o histórico de um condomínio específico. Responda APENAS com base nos dados fornecidos. Se não houver informação suficiente nos dados, diga explicitamente que não encontrou dados sobre o tema. Nunca invente informações. Use português de Portugal formal.`,
 
-      general: `Você é um assistente inteligente para gestão de condomínios em Portugal (CondoFlow). Ajude o gestor com análises, resumos, sugestões e redação de textos administrativos. Responda APENAS com base nos dados do condomínio fornecidos — nunca invente informações. Use português de Portugal formal e profissional.`,
+      general: `Você é um assistente inteligente para gestão de condomínios em Portugal (CondFlow). Ajude o gestor com análises, resumos, sugestões e redação de textos administrativos. Responda APENAS com base nos dados do condomínio fornecidos — nunca invente informações. Use português de Portugal formal e profissional.`,
     };
 
     let systemPrompt = basePrompts[feature] || basePrompts.general;
