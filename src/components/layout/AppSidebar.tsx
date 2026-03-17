@@ -1,7 +1,8 @@
 import {
-  Building2, LayoutDashboard, AlertTriangle, Users, FileText,
-  Calendar, Truck, CalendarDays, BarChart3, Brain, Settings, ListChecks, ScrollText,
+  LayoutDashboard, AlertTriangle, Users, FileText,
+  Calendar, Truck, CalendarDays, BarChart3, Brain, Settings, ListChecks, ScrollText, Building2,
 } from 'lucide-react';
+import condflowLogo from '@/assets/condflow-logo.png';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
 import {
