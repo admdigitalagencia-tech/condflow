@@ -48,7 +48,7 @@ export function AppSidebar() {
           {!collapsed && (
             <div className="flex flex-col">
               <span className="text-[13px] font-bold text-sidebar-accent-foreground tracking-tight leading-none">
-                CondoFlow
+                CondFlow
               </span>
               <span className="text-[10px] text-sidebar-muted leading-tight mt-0.5">
                 Gestão de Condomínios
