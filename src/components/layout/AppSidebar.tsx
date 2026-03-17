@@ -43,8 +43,8 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border px-4 py-5">
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sidebar-primary shrink-0 overflow-hidden">
-            <img src={condflowLogo} alt="CondFlow" className="h-6 w-6 object-contain" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white shrink-0 overflow-hidden">
+            <img src={condflowLogo} alt="CondFlow" className="h-7 w-7 object-contain" />
           </div>
           {!collapsed && (
             <div className="flex flex-col">
