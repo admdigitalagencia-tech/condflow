@@ -1,7 +1,8 @@
 import {
-  Building2, LayoutDashboard, AlertTriangle, Users, FileText,
-  Calendar, Truck, CalendarDays, BarChart3, Brain, Settings, ListChecks, ScrollText,
+  LayoutDashboard, AlertTriangle, Users, FileText,
+  Calendar, Truck, CalendarDays, BarChart3, Brain, Settings, ListChecks, ScrollText, Building2,
 } from 'lucide-react';
+import condflowLogo from '@/assets/condflow-logo.png';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
 import {
@@ -42,8 +43,8 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border px-4 py-5">
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sidebar-primary shrink-0">
-            <Building2 className="h-4 w-4 text-sidebar-primary-foreground" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sidebar-primary shrink-0 overflow-hidden">
+            <img src={condflowLogo} alt="CondFlow" className="h-6 w-6 object-contain" />
           </div>
           {!collapsed && (
             <div className="flex flex-col">
