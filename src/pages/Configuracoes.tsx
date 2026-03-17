@@ -59,7 +59,11 @@ export default function Configuracoes() {
   });
 
   useEffect(() => {
-    if (user) fetchProfile();
+    if (user) {
+      fetchProfile();
+    } else {
+      setLoading(false);
+    }
   }, [user]);
 
   const fetchProfile = async () => {
