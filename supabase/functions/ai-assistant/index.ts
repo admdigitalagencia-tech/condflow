@@ -14,7 +14,7 @@ serve(async (req) => {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     const basePrompts: Record<string, string> = {
-      condominium_summary: `Você é um assistente de gestão de condomínios em Portugal (CondoFlow). Analise os dados do condomínio fornecido e gere um resumo operacional completo:
+      condominium_summary: `Você é um assistente de gestão de condomínios em Portugal (CondFlow). Analise os dados do condomínio fornecido e gere um resumo operacional completo:
 1. **Visão Geral**: síntese da situação atual do prédio
 2. **Problemas Prioritários**: ocorrências abertas mais urgentes
 3. **Decisões Recentes**: últimas deliberações de assembleias
