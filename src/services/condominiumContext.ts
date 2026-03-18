@@ -68,7 +68,7 @@ export async function fetchCondominiumContext(condominiumId: string): Promise<Co
     supabase.from('tickets').select('id, code, title, category, priority, status, description, opened_at, due_date').eq('condominium_id', condominiumId).order('last_activity_at', { ascending: false }).limit(50),
     supabase.from('assemblies').select('id, title, assembly_type, scheduled_date, status, minutes_status, agenda_text, location').eq('condominium_id', condominiumId).order('scheduled_date', { ascending: false }).limit(20),
     supabase.from('tasks').select('id, title, status, priority, due_date, description').eq('condominium_id', condominiumId).order('created_at', { ascending: false }).limit(50),
-    supabase.from('documents').select('id, title, document_type, created_at').eq('condominium_id', condominiumId).order('created_at', { ascending: false }).limit(30),
+    supabase.from('documents').select('id, title, document_type, created_at, extracted_text, ai_summary, metadata_json').eq('condominium_id', condominiumId).order('created_at', { ascending: false }).limit(30),
   ]);
 
   if (condoRes.error) throw condoRes.error;
