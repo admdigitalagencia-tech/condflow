@@ -56,6 +56,9 @@ export interface CondominiumContext {
     title: string;
     document_type: string;
     created_at: string;
+    extracted_text: string | null;
+    ai_summary: string | null;
+    metadata_json: any;
   }>;
 }
 
