@@ -252,7 +252,7 @@ export default function Documentos() {
                         <Loader2 className="h-3 w-3 animate-spin" /> A processar
                       </Badge>
                     ) : isProcessed(doc) ? (
-                      <Badge variant="default" className="text-[10px] gap-1 bg-emerald-500/10 text-emerald-700 border-emerald-200 hover:bg-emerald-500/20">
+                      <Badge variant="default" className="text-[10px] gap-1 bg-primary/10 text-primary border-primary/20 hover:bg-primary/20">
                         <Sparkles className="h-3 w-3" /> Processado
                       </Badge>
                     ) : (
