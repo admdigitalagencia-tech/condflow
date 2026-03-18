@@ -30,6 +30,7 @@ const ACTIONS = [
   { key: 'condominium_summary', label: 'Resumir condomínio', icon: Building2, context: 'general' as ContextType },
   { key: 'ticket_summary', label: 'Resumir ocorrência', icon: AlertTriangle, context: 'ticket' as ContextType },
   { key: 'assembly_summary', label: 'Resumir assembleia', icon: Calendar, context: 'assembly' as ContextType },
+  { key: 'document_analysis', label: 'Analisar documentos', icon: FileText, context: 'general' as ContextType },
   { key: 'formal_response', label: 'Gerar resposta formal', icon: MessageSquare, context: 'general' as ContextType },
   { key: 'next_steps', label: 'Sugerir próximos passos', icon: ListChecks, context: 'general' as ContextType },
   { key: 'assembly_tasks', label: 'Tarefas pós-assembleia', icon: ClipboardList, context: 'assembly' as ContextType },
