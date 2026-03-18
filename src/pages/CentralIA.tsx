@@ -112,6 +112,7 @@ export default function CentralIA() {
         ticket_summary: 'Analisa esta ocorrência',
         assembly_summary: 'Analisa esta assembleia',
         assembly_tasks: 'Gera as tarefas pós-assembleia',
+        document_analysis: 'Analisa os documentos deste condomínio e identifica informações importantes, valores, decisões e temas relevantes',
       };
       return defaults[selectedAction] || 'Analisa o contexto deste condomínio';
     })();
