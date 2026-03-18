@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FileText, Upload, Search, X, ExternalLink, Pencil, Trash2 } from 'lucide-react';
+import { FileText, Upload, Search, X, ExternalLink, Pencil, Trash2, Sparkles, Loader2, Eye, Brain, Tag } from 'lucide-react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Button } from '@/components/ui/button';
@@ -9,9 +9,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useDocuments, useCreateDocument, useDeleteDocument, useUpdateDocument } from '@/hooks/useDocuments';
 import { useCondominiums } from '@/hooks/useCondominiums';
-import { DOCUMENT_TYPES, documentTypeLabel, uploadFile, validateDocumentFile, sanitizeStorageFileName, ALLOWED_DOCUMENT_EXTENSIONS_LABEL } from '@/services/documents';
+import { DOCUMENT_TYPES, documentTypeLabel, uploadFile, validateDocumentFile, sanitizeStorageFileName, ALLOWED_DOCUMENT_EXTENSIONS_LABEL, processDocument } from '@/services/documents';
 import { toast } from 'sonner';
 
 export default function Documentos() {
@@ -27,6 +28,9 @@ export default function Documentos() {
   const [uploadOpen, setUploadOpen] = useState(false);
   const [editDoc, setEditDoc] = useState<any>(null);
   const [dragging, setDragging] = useState(false);
+  const [processingId, setProcessingId] = useState<string | null>(null);
+  const [viewSummaryDoc, setViewSummaryDoc] = useState<any>(null);
+  const [viewInsightsDoc, setViewInsightsDoc] = useState<any>(null);
 
   // Upload state
   const [uploadFile_, setUploadFile] = useState<File | null>(null);
@@ -79,7 +83,7 @@ export default function Documentos() {
       const safeFileName = sanitizeStorageFileName(uploadFile_.name);
       const path = `${Date.now()}_${safeFileName}`;
       const { path: storedPath } = await uploadFile(uploadFile_, path);
-      await createDoc.mutateAsync({
+      const result = await createDoc.mutateAsync({
         title: uploadTitle,
         document_type: uploadType,
         file_path: storedPath,
@@ -90,6 +94,11 @@ export default function Documentos() {
       toast.success('Documento carregado com sucesso');
       setUploadOpen(false);
       resetUploadForm();
+
+      // Auto-process document with AI in background
+      if (result?.id) {
+        triggerProcessing(result.id);
+      }
     } catch (err: any) {
       const message = err?.message || err?.error_description || String(err);
       if (message.includes('Invalid key')) {
@@ -108,6 +117,22 @@ export default function Documentos() {
       console.error('Upload error:', err);
     } finally {
       setUploading(false);
+    }
+  };
+
+  const triggerProcessing = async (docId: string) => {
+    setProcessingId(docId);
+    try {
+      await processDocument(docId);
+      toast.success('Documento processado pela IA com sucesso');
+      // Refresh documents list
+      createDoc.reset();
+      window.location.reload(); // Simple refresh to get updated data
+    } catch (err: any) {
+      console.error('AI processing error:', err);
+      toast.error('Erro ao processar documento com IA: ' + (err?.message || ''));
+    } finally {
+      setProcessingId(null);
     }
   };
 
@@ -146,6 +171,9 @@ export default function Documentos() {
     return `${supabaseUrl}/storage/v1/object/public/documents/${path}`;
   };
 
+  const isProcessed = (doc: any) => !!(doc.ai_summary || doc.extracted_text);
+  const hasInsights = (doc: any) => doc.metadata_json && typeof doc.metadata_json === 'object' && Object.keys(doc.metadata_json).length > 0;
+
   return (
     <div
       className="space-y-4"
@@ -155,7 +183,7 @@ export default function Documentos() {
     >
       <PageHeader
         title="Documentos"
-        description="Biblioteca documental centralizada"
+        description="Biblioteca documental centralizada com processamento IA"
         actions={
           <Button size="sm" className="gap-1.5" onClick={() => setUploadOpen(true)}>
             <Upload className="h-3.5 w-3.5" /> Upload
@@ -206,9 +234,10 @@ export default function Documentos() {
                 <TableHead>Título</TableHead>
                 <TableHead>Tipo</TableHead>
                 <TableHead>Condomínio</TableHead>
+                <TableHead>IA</TableHead>
                 <TableHead>Tamanho</TableHead>
                 <TableHead>Data</TableHead>
-                <TableHead className="w-[100px]">Ações</TableHead>
+                <TableHead className="w-[140px]">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -217,10 +246,38 @@ export default function Documentos() {
                   <TableCell className="font-medium">{doc.title}</TableCell>
                   <TableCell><Badge variant="outline" className="text-[10px]">{documentTypeLabel(doc.document_type)}</Badge></TableCell>
                   <TableCell className="text-muted-foreground">{(doc as any).condominiums?.name || '—'}</TableCell>
+                  <TableCell>
+                    {processingId === doc.id ? (
+                      <Badge variant="secondary" className="text-[10px] gap-1">
+                        <Loader2 className="h-3 w-3 animate-spin" /> A processar
+                      </Badge>
+                    ) : isProcessed(doc) ? (
+                      <Badge variant="default" className="text-[10px] gap-1 bg-emerald-500/10 text-emerald-700 border-emerald-200 hover:bg-emerald-500/20">
+                        <Sparkles className="h-3 w-3" /> Processado
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-[10px] text-muted-foreground">Pendente</Badge>
+                    )}
+                  </TableCell>
                   <TableCell className="text-muted-foreground text-xs">{formatSize(doc.file_size)}</TableCell>
                   <TableCell className="text-muted-foreground text-xs">{formatDate(doc.created_at)}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
+                      {isProcessed(doc) && (
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setViewSummaryDoc(doc)} title="Ver resumo IA">
+                          <Eye className="h-3.5 w-3.5 text-primary" />
+                        </Button>
+                      )}
+                      {hasInsights(doc) && (
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setViewInsightsDoc(doc)} title="Ver insights">
+                          <Tag className="h-3.5 w-3.5 text-primary" />
+                        </Button>
+                      )}
+                      {!isProcessed(doc) && processingId !== doc.id && (
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => triggerProcessing(doc.id)} title="Processar com IA">
+                          <Brain className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
                       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => window.open(getPublicUrl(doc.file_path), '_blank')}>
                         <ExternalLink className="h-3.5 w-3.5" />
                       </Button>
@@ -265,6 +322,12 @@ export default function Documentos() {
                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setUploadFile(null)}><X className="h-3 w-3" /></Button>
               </div>
             )}
+            <div className="p-3 bg-primary/5 rounded-md border border-primary/10">
+              <div className="flex items-center gap-2 text-xs text-primary">
+                <Sparkles className="h-3.5 w-3.5" />
+                <span>O documento será automaticamente processado pela IA após o upload (extração de texto, resumo e metadados).</span>
+              </div>
+            </div>
             <div className="space-y-2">
               <Label>Título</Label>
               <Input value={uploadTitle} onChange={e => setUploadTitle(e.target.value)} />
@@ -325,6 +388,113 @@ export default function Documentos() {
               <Button className="w-full" onClick={handleEditSave}>Guardar</Button>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* View Summary Dialog */}
+      <Dialog open={!!viewSummaryDoc} onOpenChange={v => { if (!v) setViewSummaryDoc(null); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              Resumo IA — {viewSummaryDoc?.title}
+            </DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="max-h-[60vh]">
+            <div className="space-y-4">
+              {viewSummaryDoc?.ai_summary ? (
+                <div className="prose prose-sm dark:prose-invert max-w-none">
+                  <p className="whitespace-pre-wrap">{viewSummaryDoc.ai_summary}</p>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">Sem resumo disponível.</p>
+              )}
+              {viewSummaryDoc?.extracted_text && (
+                <div>
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-2">Texto Extraído</h4>
+                  <div className="bg-muted/50 rounded-md p-3 text-xs whitespace-pre-wrap max-h-[300px] overflow-y-auto">
+                    {viewSummaryDoc.extracted_text.slice(0, 3000)}
+                    {viewSummaryDoc.extracted_text.length > 3000 && '...'}
+                  </div>
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Insights Dialog */}
+      <Dialog open={!!viewInsightsDoc} onOpenChange={v => { if (!v) setViewInsightsDoc(null); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Tag className="h-4 w-4 text-primary" />
+              Insights Extraídos — {viewInsightsDoc?.title}
+            </DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="max-h-[60vh]">
+            {viewInsightsDoc?.metadata_json && typeof viewInsightsDoc.metadata_json === 'object' ? (
+              <div className="space-y-4">
+                {viewInsightsDoc.metadata_json.tipo_documento && (
+                  <div>
+                    <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-1">Tipo Identificado</h4>
+                    <Badge variant="outline">{viewInsightsDoc.metadata_json.tipo_documento}</Badge>
+                  </div>
+                )}
+                {viewInsightsDoc.metadata_json.data_documento && (
+                  <div>
+                    <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-1">Data do Documento</h4>
+                    <p className="text-sm">{viewInsightsDoc.metadata_json.data_documento}</p>
+                  </div>
+                )}
+                {viewInsightsDoc.metadata_json.entidades?.length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-1">Entidades</h4>
+                    <div className="flex flex-wrap gap-1.5">
+                      {viewInsightsDoc.metadata_json.entidades.map((e: string, i: number) => (
+                        <Badge key={i} variant="secondary" className="text-[10px]">{e}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {viewInsightsDoc.metadata_json.valores_financeiros?.length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-1">Valores Financeiros</h4>
+                    <div className="space-y-1">
+                      {viewInsightsDoc.metadata_json.valores_financeiros.map((v: any, i: number) => (
+                        <div key={i} className="flex items-center justify-between text-sm bg-muted/50 rounded px-3 py-1.5">
+                          <span>{v.descricao}</span>
+                          <span className="font-semibold">€{v.valor?.toLocaleString('pt-PT')}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {viewInsightsDoc.metadata_json.temas?.length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-1">Temas</h4>
+                    <div className="flex flex-wrap gap-1.5">
+                      {viewInsightsDoc.metadata_json.temas.map((t: string, i: number) => (
+                        <Badge key={i} variant="outline" className="text-[10px]">{t}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {viewInsightsDoc.metadata_json.palavras_chave?.length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-1">Palavras-chave</h4>
+                    <div className="flex flex-wrap gap-1.5">
+                      {viewInsightsDoc.metadata_json.palavras_chave.map((k: string, i: number) => (
+                        <Badge key={i} variant="secondary" className="text-[10px]">{k}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">Sem insights extraídos.</p>
+            )}
+          </ScrollArea>
         </DialogContent>
       </Dialog>
     </div>
