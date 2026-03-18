@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
+import { FileText } from 'lucide-react';
 import { streamAI } from '@/services/aiAssistant';
 import { buildCondominiumPromptContext, fetchTicketContext, fetchAssemblyContext } from '@/services/condominiumContext';
 import { useCondominiumContext } from '@/hooks/useCondominiumContext';
