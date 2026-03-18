@@ -10,6 +10,16 @@ export async function extractDocumentText(documentId: string, action?: 'parse_at
   return data as { success: boolean; extracted_text: string; attendees_count: number; attendees: any[] };
 }
 
+// Process document: extract text, generate AI summary, extract metadata
+export async function processDocument(documentId: string) {
+  const { data, error } = await supabase.functions.invoke('process-document', {
+    body: { document_id: documentId },
+  });
+  if (error) throw error;
+  if (data?.error) throw new Error(data.error);
+  return data as { success: boolean; ai_summary: string; metadata: Record<string, any>; has_extracted_text: boolean };
+}
+
 export const DOCUMENT_TYPES = [
   { value: 'ata', label: 'Ata' },
   { value: 'convocatoria', label: 'Convocatória' },

@@ -56,6 +56,9 @@ export interface CondominiumContext {
     title: string;
     document_type: string;
     created_at: string;
+    extracted_text: string | null;
+    ai_summary: string | null;
+    metadata_json: any;
   }>;
 }
 
@@ -65,7 +68,7 @@ export async function fetchCondominiumContext(condominiumId: string): Promise<Co
     supabase.from('tickets').select('id, code, title, category, priority, status, description, opened_at, due_date').eq('condominium_id', condominiumId).order('last_activity_at', { ascending: false }).limit(50),
     supabase.from('assemblies').select('id, title, assembly_type, scheduled_date, status, minutes_status, agenda_text, location').eq('condominium_id', condominiumId).order('scheduled_date', { ascending: false }).limit(20),
     supabase.from('tasks').select('id, title, status, priority, due_date, description').eq('condominium_id', condominiumId).order('created_at', { ascending: false }).limit(50),
-    supabase.from('documents').select('id, title, document_type, created_at').eq('condominium_id', condominiumId).order('created_at', { ascending: false }).limit(30),
+    supabase.from('documents').select('id, title, document_type, created_at, extracted_text, ai_summary, metadata_json').eq('condominium_id', condominiumId).order('created_at', { ascending: false }).limit(30),
   ]);
 
   if (condoRes.error) throw condoRes.error;
@@ -156,7 +159,29 @@ export function buildCondominiumPromptContext(ctx: CondominiumContext): string {
     prompt += `\n### DOCUMENTOS RECENTES\n`;
     documents.slice(0, 10).forEach(d => {
       prompt += `- ${d.title} (${d.document_type}) — ${new Date(d.created_at).toLocaleDateString('pt-PT')}\n`;
+      if (d.ai_summary) prompt += `  Resumo: ${d.ai_summary.slice(0, 300)}\n`;
+      if (d.metadata_json && typeof d.metadata_json === 'object') {
+        const meta = d.metadata_json as Record<string, any>;
+        if (meta.temas?.length) prompt += `  Temas: ${meta.temas.join(', ')}\n`;
+        if (meta.valores_financeiros?.length) {
+          meta.valores_financeiros.forEach((v: any) => { prompt += `  Valor: ${v.descricao} — €${v.valor}\n`; });
+        }
+        if (meta.entidades?.length) prompt += `  Entidades: ${meta.entidades.join(', ')}\n`;
+      }
     });
+  }
+
+  // Add full document content for documents with extracted text (for deep context)
+  const docsWithText = documents.filter(d => d.extracted_text);
+  if (docsWithText.length > 0) {
+    prompt += `\n### CONTEÚDO COMPLETO DOS DOCUMENTOS\n`;
+    let charBudget = 12000;
+    for (const d of docsWithText.slice(0, 8)) {
+      if (charBudget <= 0) break;
+      const text = d.extracted_text!.slice(0, charBudget);
+      prompt += `\n#### ${d.title} (${d.document_type})\n${text}\n`;
+      charBudget -= text.length;
+    }
   }
 
   return prompt;

@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
+import { FileText } from 'lucide-react';
 import { streamAI } from '@/services/aiAssistant';
 import { buildCondominiumPromptContext, fetchTicketContext, fetchAssemblyContext } from '@/services/condominiumContext';
 import { useCondominiumContext } from '@/hooks/useCondominiumContext';
@@ -29,6 +30,7 @@ const ACTIONS = [
   { key: 'condominium_summary', label: 'Resumir condomínio', icon: Building2, context: 'general' as ContextType },
   { key: 'ticket_summary', label: 'Resumir ocorrência', icon: AlertTriangle, context: 'ticket' as ContextType },
   { key: 'assembly_summary', label: 'Resumir assembleia', icon: Calendar, context: 'assembly' as ContextType },
+  { key: 'document_analysis', label: 'Analisar documentos', icon: FileText, context: 'general' as ContextType },
   { key: 'formal_response', label: 'Gerar resposta formal', icon: MessageSquare, context: 'general' as ContextType },
   { key: 'next_steps', label: 'Sugerir próximos passos', icon: ListChecks, context: 'general' as ContextType },
   { key: 'assembly_tasks', label: 'Tarefas pós-assembleia', icon: ClipboardList, context: 'assembly' as ContextType },
@@ -110,6 +112,7 @@ export default function CentralIA() {
         ticket_summary: 'Analisa esta ocorrência',
         assembly_summary: 'Analisa esta assembleia',
         assembly_tasks: 'Gera as tarefas pós-assembleia',
+        document_analysis: 'Analisa os documentos deste condomínio e identifica informações importantes, valores, decisões e temas relevantes',
       };
       return defaults[selectedAction] || 'Analisa o contexto deste condomínio';
     })();
