@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { FileText, Upload, Trash2, Download, Image, File } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { createDocument, openDocument, uploadFile } from '@/services/documents';
 
 interface Props {
   ticketId: string;
@@ -61,19 +62,21 @@ export function TicketAttachments({ ticketId, condominiumId }: Props) {
         const safeName = file.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9._-]/g, '_');
         const path = `tickets/${ticketId}/${Date.now()}_${safeName}`;
 
-        const { error: uploadError } = await supabase.storage.from('documents').upload(path, file);
-        if (uploadError) { toast.error(`Erro ao carregar ${file.name}`); continue; }
-
-        const { error: dbError } = await supabase.from('documents').insert({
-          title: file.name,
-          file_path: path,
-          file_size: file.size,
-          mime_type: file.type,
-          document_type: 'fotografia' as any,
-          ticket_id: ticketId,
-          condominium_id: condominiumId,
-        });
-        if (dbError) { toast.error(`Erro ao registar ${file.name}`); continue; }
+        try {
+          const { path: storedPath } = await uploadFile(file, path);
+          await createDocument({
+            title: file.name,
+            file_path: storedPath,
+            file_size: file.size,
+            mime_type: file.type,
+            document_type: 'fotografia',
+            ticket_id: ticketId,
+            condominium_id: condominiumId,
+          });
+        } catch {
+          toast.error(`Erro ao carregar ${file.name}`);
+          continue;
+        }
       }
       qc.invalidateQueries({ queryKey: ['ticket-attachments', ticketId] });
       toast.success('Anexo(s) carregado(s)');
@@ -81,11 +84,6 @@ export function TicketAttachments({ ticketId, condominiumId }: Props) {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = '';
     }
-  };
-
-  const getDownloadUrl = (path: string) => {
-    const { data } = supabase.storage.from('documents').getPublicUrl(path);
-    return data.publicUrl;
   };
 
   const getIcon = (mime: string | null) => {
@@ -128,9 +126,9 @@ export function TicketAttachments({ ticketId, condominiumId }: Props) {
                 <p className="font-medium truncate">{doc.title}</p>
                 <p className="text-[11px] text-muted-foreground">{formatSize(doc.file_size)} · {new Date(doc.created_at).toLocaleDateString('pt-PT')}</p>
               </div>
-              <a href={getDownloadUrl(doc.file_path)} target="_blank" rel="noopener noreferrer">
-                <Button variant="ghost" size="icon" className="h-7 w-7"><Download className="h-3.5 w-3.5" /></Button>
-              </a>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => void openDocument(doc.file_path)}>
+                <Download className="h-3.5 w-3.5" />
+              </Button>
               <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => { if (confirm('Eliminar anexo?')) deleteMutation.mutate({ id: doc.id, file_path: doc.file_path }); }}>
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>

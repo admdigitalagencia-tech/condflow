@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
+import { requireActiveOrganizationId } from '@/services/organization';
 
 export type Stakeholder = Database['public']['Tables']['stakeholders']['Row'];
 export type StakeholderInsert = Database['public']['Tables']['stakeholders']['Insert'];
@@ -37,9 +38,10 @@ export async function fetchStakeholder(id: string) {
 }
 
 export async function createStakeholder(values: StakeholderInsert) {
+  const organizationId = values.organization_id || await requireActiveOrganizationId();
   const { data, error } = await supabase
     .from('stakeholders')
-    .insert(values)
+    .insert({ ...values, organization_id: organizationId })
     .select()
     .single();
   if (error) throw error;
@@ -73,9 +75,15 @@ export async function fetchStakeholdersByCondominium(condominiumId: string) {
 }
 
 export async function linkStakeholderToCondominium(stakeholderId: string, condominiumId: string, roleInCondominium?: string) {
+  const organizationId = await requireActiveOrganizationId();
   const { error } = await supabase
     .from('stakeholder_condominiums')
-    .insert({ stakeholder_id: stakeholderId, condominium_id: condominiumId, role_in_condominium: roleInCondominium });
+    .insert({
+      stakeholder_id: stakeholderId,
+      condominium_id: condominiumId,
+      role_in_condominium: roleInCondominium,
+      organization_id: organizationId,
+    } as any);
   if (error) throw error;
 }
 

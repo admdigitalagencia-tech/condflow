@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
+import { requireActiveOrganizationId } from '@/services/organization';
 
 export type Condominium = Database['public']['Tables']['condominiums']['Row'];
 export type CondominiumInsert = Database['public']['Tables']['condominiums']['Insert'];
@@ -25,9 +26,10 @@ export async function fetchCondominium(id: string) {
 }
 
 export async function createCondominium(values: CondominiumInsert) {
+  const organizationId = values.organization_id || await requireActiveOrganizationId();
   const { data, error } = await supabase
     .from('condominiums')
-    .insert(values)
+    .insert({ ...values, organization_id: organizationId })
     .select()
     .single();
   if (error) throw error;

@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { requireActiveOrganizationId } from '@/services/organization';
 
 export type TaskStatus = 'pendente' | 'em_andamento' | 'bloqueada' | 'concluida' | 'cancelada';
 export type TaskPriority = 'baixa' | 'media' | 'alta' | 'urgente';
@@ -76,9 +77,11 @@ export async function fetchTask(id: string) {
 }
 
 export async function createTask(form: TaskFormData) {
+  const organizationId = await requireActiveOrganizationId();
   const { data, error } = await supabase
     .from('tasks')
     .insert({
+      organization_id: organizationId,
       title: form.title,
       description: form.description || null,
       condominium_id: form.condominium_id && form.condominium_id.trim() !== '' ? form.condominium_id : null,

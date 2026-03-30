@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { requireAuthenticatedUser, requireEntityAccess } from "../_shared/auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -13,12 +13,11 @@ serve(async (req) => {
     const { assembly_id } = await req.json();
     if (!assembly_id) throw new Error("assembly_id is required");
 
+    const { user, adminClient: supabase } = await requireAuthenticatedUser(req);
+    const organizationId = await requireEntityAccess(supabase, user.id, "assemblies", "id", assembly_id);
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
-
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Fetch all assembly data in parallel
     const [assemblyRes, pointsRes, attendeesRes, transcriptsRes, docsRes, existingMinutesRes] = await Promise.all([
@@ -215,6 +214,7 @@ Gera a ata completa seguindo o modelo oficial. Usa APENAS os dados acima. Escrev
     const { data: minute, error: minuteError } = await supabase
       .from("minutes")
       .insert({
+        organization_id: organizationId,
         assembly_id,
         title: `Ata v${versionNumber} — ${assembly.title}`,
         version_number: versionNumber,
@@ -235,11 +235,13 @@ Gera a ata completa seguindo o modelo oficial. Usa APENAS os dados acima. Escrev
 
     // Log AI run
     await supabase.from("ai_runs").insert({
+      organization_id: organizationId,
       feature_name: "generate_minutes",
       related_entity_type: "assembly",
       related_entity_id: assembly_id,
       condominium_id: assembly.condominium_id,
       status: "completed",
+      created_by: user.id,
       input_snapshot_json: {
         points_count: points.length,
         attendees_count: attendees.length,

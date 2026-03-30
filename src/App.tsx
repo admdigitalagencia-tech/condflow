@@ -6,6 +6,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { OrganizationProvider } from '@/contexts/OrganizationContext';
 
 // App pages
 import Dashboard from '@/pages/Dashboard';
@@ -32,36 +33,38 @@ const queryClient = new QueryClient();
 const App = () => (
   <ThemeProvider>
     <AuthProvider>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <AppLayout>
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/condominios" element={<Condominios />} />
-            <Route path="/condominios/:id" element={<CondominioDetail />} />
-            <Route path="/ocorrencias" element={<Ocorrencias />} />
-            <Route path="/ocorrencias/:id" element={<OcorrenciaDetail />} />
-            <Route path="/assembleias" element={<Assembleias />} />
-            <Route path="/assembleias/:id" element={<AssembleiaDetail />} />
-            <Route path="/assembleias/:id/ata/:minuteId" element={<MinutesEditor />} />
-            <Route path="/documentos" element={<Documentos />} />
-            <Route path="/stakeholders" element={<Stakeholders />} />
-            <Route path="/fornecedores" element={<Fornecedores />} />
-            <Route path="/agenda" element={<Agenda />} />
-            <Route path="/relatorios" element={<Relatorios />} />
-            <Route path="/ia" element={<CentralIA />} />
-            <Route path="/tarefas" element={<Tarefas />} />
-            <Route path="/gerador-ata" element={<GeradorAta />} />
-            <Route path="/configuracoes" element={<Configuracoes />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-            </AppLayout>
-          </BrowserRouter>
-        </TooltipProvider>
-      </QueryClientProvider>
+      <OrganizationProvider>
+        <QueryClientProvider client={queryClient}>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <AppLayout>
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/condominios" element={<Condominios />} />
+              <Route path="/condominios/:id" element={<CondominioDetail />} />
+              <Route path="/ocorrencias" element={<Ocorrencias />} />
+              <Route path="/ocorrencias/:id" element={<OcorrenciaDetail />} />
+              <Route path="/assembleias" element={<Assembleias />} />
+              <Route path="/assembleias/:id" element={<AssembleiaDetail />} />
+              <Route path="/assembleias/:id/ata/:minuteId" element={<MinutesEditor />} />
+              <Route path="/documentos" element={<Documentos />} />
+              <Route path="/stakeholders" element={<Stakeholders />} />
+              <Route path="/fornecedores" element={<Fornecedores />} />
+              <Route path="/agenda" element={<Agenda />} />
+              <Route path="/relatorios" element={<Relatorios />} />
+              <Route path="/ia" element={<CentralIA />} />
+              <Route path="/tarefas" element={<Tarefas />} />
+              <Route path="/gerador-ata" element={<GeradorAta />} />
+              <Route path="/configuracoes" element={<Configuracoes />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+              </AppLayout>
+            </BrowserRouter>
+          </TooltipProvider>
+        </QueryClientProvider>
+      </OrganizationProvider>
     </AuthProvider>
   </ThemeProvider>
 );

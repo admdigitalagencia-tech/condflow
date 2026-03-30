@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { requireAuthenticatedUser, requireEntityAccess } from "../_shared/auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -13,12 +13,11 @@ serve(async (req) => {
     const { document_id } = await req.json();
     if (!document_id) throw new Error("document_id is required");
 
+    const { user, adminClient: supabase } = await requireAuthenticatedUser(req);
+    await requireEntityAccess(supabase, user.id, "documents", "id", document_id);
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
-
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Fetch document
     const { data: doc, error: docErr } = await supabase

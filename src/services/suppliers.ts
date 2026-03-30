@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
+import { requireActiveOrganizationId } from '@/services/organization';
 
 export type Supplier = Database['public']['Tables']['suppliers']['Row'];
 export type SupplierInsert = Database['public']['Tables']['suppliers']['Insert'];
@@ -29,9 +30,10 @@ export async function fetchSuppliers() {
 }
 
 export async function createSupplier(values: SupplierInsert) {
+  const organizationId = values.organization_id || await requireActiveOrganizationId();
   const { data, error } = await supabase
     .from('suppliers')
-    .insert(values)
+    .insert({ ...values, organization_id: organizationId })
     .select()
     .single();
   if (error) throw error;
@@ -65,9 +67,15 @@ export async function fetchSuppliersByCondominium(condominiumId: string) {
 }
 
 export async function linkSupplierToCondominium(supplierId: string, condominiumId: string, serviceDescription?: string) {
+  const organizationId = await requireActiveOrganizationId();
   const { error } = await supabase
     .from('supplier_condominiums')
-    .insert({ supplier_id: supplierId, condominium_id: condominiumId, service_description: serviceDescription });
+    .insert({
+      supplier_id: supplierId,
+      condominium_id: condominiumId,
+      service_description: serviceDescription,
+      organization_id: organizationId,
+    } as any);
   if (error) throw error;
 }
 

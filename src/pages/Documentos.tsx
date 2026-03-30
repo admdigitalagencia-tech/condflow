@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useDocuments, useCreateDocument, useDeleteDocument, useUpdateDocument } from '@/hooks/useDocuments';
 import { useCondominiums } from '@/hooks/useCondominiums';
-import { DOCUMENT_TYPES, documentTypeLabel, uploadFile, validateDocumentFile, sanitizeStorageFileName, ALLOWED_DOCUMENT_EXTENSIONS_LABEL, processDocument } from '@/services/documents';
+import { DOCUMENT_TYPES, documentTypeLabel, openDocument, uploadFile, validateDocumentFile, sanitizeStorageFileName, ALLOWED_DOCUMENT_EXTENSIONS_LABEL, processDocument } from '@/services/documents';
 import { toast } from 'sonner';
 
 export default function Documentos() {
@@ -166,11 +166,6 @@ export default function Documentos() {
 
   const formatDate = (d: string) => new Date(d).toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
-  const getPublicUrl = (path: string) => {
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    return `${supabaseUrl}/storage/v1/object/public/documents/${path}`;
-  };
-
   const isProcessed = (doc: any) => !!(doc.ai_summary || doc.extracted_text);
   const hasInsights = (doc: any) => doc.metadata_json && typeof doc.metadata_json === 'object' && Object.keys(doc.metadata_json).length > 0;
 
@@ -278,7 +273,7 @@ export default function Documentos() {
                           <Brain className="h-3.5 w-3.5" />
                         </Button>
                       )}
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => window.open(getPublicUrl(doc.file_path), '_blank')}>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => void openDocument(doc.file_path)}>
                         <ExternalLink className="h-3.5 w-3.5" />
                       </Button>
                       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditDoc({ ...doc })}>

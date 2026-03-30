@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { createSignedDocumentUrl, requireActiveOrganizationId } from '@/services/organization';
 
 // Extract text from uploaded document using AI
 export async function extractDocumentText(documentId: string, action?: 'parse_attendance') {
@@ -137,9 +138,10 @@ export async function createDocument(values: {
   supplier_id?: string;
   issue_date?: string;
 }) {
+  const organizationId = await requireActiveOrganizationId();
   const { data, error } = await supabase
     .from('documents')
-    .insert(values as any)
+    .insert({ ...values, organization_id: organizationId } as any)
     .select('*, condominiums(name)')
     .single();
   if (error) throw error;
@@ -163,6 +165,7 @@ export async function deleteDocument(id: string) {
 }
 
 export async function uploadFile(file: File, path: string) {
+  const organizationId = await requireActiveOrganizationId();
   const pathSegments = path.split('/').filter(Boolean);
   const safePath = pathSegments
     .map((segment, index) => {
@@ -177,17 +180,23 @@ export async function uploadFile(file: File, path: string) {
     .filter(Boolean)
     .join('/');
 
+  const finalPath = `${organizationId}/${safePath}`;
+
   if (!safePath) {
     throw new Error('Nome de ficheiro inválido.');
   }
 
   const { data, error } = await supabase.storage
     .from('documents')
-    .upload(safePath, file, { upsert: true });
+    .upload(finalPath, file, { upsert: true });
 
   if (error) throw error;
 
-  const { data: urlData } = supabase.storage.from('documents').getPublicUrl(data.path);
-  return { path: data.path, url: urlData.publicUrl };
+  const signedUrl = await createSignedDocumentUrl(data.path);
+  return { path: data.path, url: signedUrl };
 }
 
+export async function openDocument(path: string) {
+  const signedUrl = await createSignedDocumentUrl(path);
+  window.open(signedUrl, '_blank', 'noopener,noreferrer');
+}

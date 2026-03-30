@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
+import { requireActiveOrganizationId } from '@/services/organization';
 
 export type Ticket = Database['public']['Tables']['tickets']['Row'];
 export type TicketInsert = Database['public']['Tables']['tickets']['Insert'];
@@ -79,9 +80,10 @@ export async function fetchTicketsByCondominium(condominiumId: string) {
 }
 
 export async function createTicket(values: TicketInsert) {
+  const organizationId = values.organization_id || await requireActiveOrganizationId();
   const { data, error } = await supabase
     .from('tickets')
-    .insert(values)
+    .insert({ ...values, organization_id: organizationId })
     .select('*, condominiums(name), suppliers(name)')
     .single();
   if (error) throw error;
@@ -122,9 +124,10 @@ export async function createTicketUpdate(values: {
   old_status?: string;
   new_status?: string;
 }) {
+  const organizationId = await requireActiveOrganizationId();
   const { data, error } = await supabase
     .from('ticket_updates')
-    .insert(values as any)
+    .insert({ ...values, organization_id: organizationId } as any)
     .select()
     .single();
   if (error) throw error;

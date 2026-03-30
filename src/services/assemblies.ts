@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { requireActiveOrganizationId } from '@/services/organization';
 
 export const ASSEMBLY_TYPES = [
   { value: 'ordinaria', label: 'Ordinária' },
@@ -64,9 +65,10 @@ export async function createAssembly(values: {
   agenda_text?: string;
   notes?: string;
 }) {
+  const organizationId = await requireActiveOrganizationId();
   const { data, error } = await supabase
     .from('assemblies')
-    .insert(values as any)
+    .insert({ ...values, organization_id: organizationId } as any)
     .select('*, condominiums(name)')
     .single();
   if (error) throw error;
@@ -106,9 +108,10 @@ export async function createAssemblyPoint(values: {
   title: string;
   description?: string;
 }) {
+  const organizationId = await requireActiveOrganizationId();
   const { data, error } = await supabase
     .from('assembly_points')
-    .insert(values as any)
+    .insert({ ...values, organization_id: organizationId } as any)
     .select()
     .single();
   if (error) throw error;
@@ -151,9 +154,10 @@ export async function createAssemblyAttendee(values: {
   represented_by?: string;
   stakeholder_id?: string;
 }) {
+  const organizationId = await requireActiveOrganizationId();
   const { data, error } = await supabase
     .from('assembly_attendees')
-    .insert(values as any)
+    .insert({ ...values, organization_id: organizationId } as any)
     .select('*, stakeholders(name, stakeholder_type)')
     .single();
   if (error) throw error;
@@ -183,9 +187,10 @@ export async function createTranscript(values: {
   raw_text?: string;
   processing_status?: string;
 }) {
+  const organizationId = await requireActiveOrganizationId();
   const { data, error } = await supabase
     .from('transcripts')
-    .insert(values as any)
+    .insert({ ...values, organization_id: organizationId } as any)
     .select()
     .single();
   if (error) throw error;
@@ -232,9 +237,10 @@ export async function createMinute(values: {
   minute_type?: string;
   generation_source?: string;
 }) {
+  const organizationId = await requireActiveOrganizationId();
   const { data, error } = await supabase
     .from('minutes')
-    .insert(values as any)
+    .insert({ ...values, organization_id: organizationId } as any)
     .select()
     .single();
   if (error) throw error;
@@ -269,9 +275,10 @@ export async function createMinuteSection(values: {
   section_title: string;
   content?: string;
 }) {
+  const organizationId = await requireActiveOrganizationId();
   const { data, error } = await supabase
     .from('minute_sections')
-    .insert(values as any)
+    .insert({ ...values, organization_id: organizationId } as any)
     .select()
     .single();
   if (error) throw error;

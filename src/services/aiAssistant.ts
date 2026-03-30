@@ -1,3 +1,5 @@
+import { supabase } from '@/integrations/supabase/client';
+
 const AI_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-assistant`;
 
 type Msg = { role: 'user' | 'assistant'; content: string };
@@ -17,11 +19,20 @@ export async function streamAI({
   onDone: () => void;
   onError?: (error: string) => void;
 }) {
+  const { data: sessionData } = await supabase.auth.getSession();
+  const accessToken = sessionData.session?.access_token;
+
+  if (!accessToken) {
+    onError?.('Sessao expirada. Inicie sessao novamente.');
+    onDone();
+    return;
+  }
+
   const resp = await fetch(AI_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+      Authorization: `Bearer ${accessToken}`,
     },
     body: JSON.stringify({ messages, feature, condominiumContext }),
   });

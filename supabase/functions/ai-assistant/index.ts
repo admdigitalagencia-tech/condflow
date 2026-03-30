@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { requireAuthenticatedUser, requireAnyActiveMembership } from "../_shared/auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,6 +11,9 @@ serve(async (req) => {
 
   try {
     const { messages, feature, condominiumContext } = await req.json();
+    const { user, adminClient } = await requireAuthenticatedUser(req);
+    await requireAnyActiveMembership(adminClient, user.id);
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
