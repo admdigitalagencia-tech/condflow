@@ -11,11 +11,22 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useDeadlineNotifications } from '@/hooks/useDeadlineNotifications';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function Topbar() {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
   const notifications = useDeadlineNotifications();
+  const { user, signOut } = useAuth();
+
+  const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Gestor';
+  const displayEmail = user?.email || 'gestor@condflow.pt';
+  const initials = displayName
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(part => part[0]?.toUpperCase() ?? '')
+    .join('') || 'G';
 
   const typeIcon = (type: string) => {
     switch (type) {
@@ -24,6 +35,11 @@ export function Topbar() {
       case 'assembly': return <Landmark className="h-4 w-4 text-blue-500" />;
       default: return <CalendarDays className="h-4 w-4" />;
     }
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/login', { replace: true });
   };
 
   return (
@@ -118,15 +134,15 @@ export function Topbar() {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="gap-2 h-9 px-2 rounded-lg hover:bg-muted/60 transition-colors">
               <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center ring-1 ring-primary/20">
-                <span className="text-xs font-semibold text-primary">G</span>
+                <span className="text-xs font-semibold text-primary">{initials}</span>
               </div>
               <ChevronDown className="h-3 w-3 text-muted-foreground hidden sm:block" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <div className="px-3 py-2.5">
-              <p className="text-sm font-medium">Gestor</p>
-              <p className="text-xs text-muted-foreground"><p className="text-xs text-muted-foreground">gestor@condflow.pt</p></p>
+              <p className="text-sm font-medium">{displayName}</p>
+              <p className="text-xs text-muted-foreground">{displayEmail}</p>
             </div>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => navigate('/configuracoes')} className="text-sm">
@@ -136,7 +152,7 @@ export function Topbar() {
               <User className="h-4 w-4 mr-2" /> Perfil
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-sm text-muted-foreground">
+            <DropdownMenuItem onClick={() => void handleSignOut()} className="text-sm text-muted-foreground">
               <LogOut className="h-4 w-4 mr-2" /> Terminar Sessão
             </DropdownMenuItem>
           </DropdownMenuContent>
